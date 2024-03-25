@@ -1,0 +1,115 @@
+body {
+    background-color: #b5b6b6;
+    font-family: sans-serif;
+    margin: 0;
+}
+
+header {
+    text-align: center;
+    background-color: #e1e1e1;
+    padding-top: 1rem;
+}
+
+hr {
+    color: black;
+    height: 0.125em;
+    background-color: black;
+}
+
+hr#header {
+    color: black;
+    height: 0.5em;
+    background-color: black;
+}
+
+div#question {
+    text-align: center;
+    background-color: #e1e1e1;
+
+    padding-left: 1rem;
+    padding-right: 1rem;
+    padding-bottom: 2rem;
+
+    border-radius: 1rem;
+
+    width: 70vw;
+    height: fit-content;
+}
+
+div#container {
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    margin-top: 10vh;
+}
+
+div#answers {
+    display: grid;
+    grid-template-columns: auto auto;
+}
+
+div#stats{
+    display: grid;
+    grid-template-columns: auto auto;
+}
+
+hr#timeBar{
+    margin-top: 1rem;
+    height: 1rem;
+    width: 90%;
+    border-radius: 0.5rem;
+    background-color: green;
+    transition: width 0.99s  linear;
+
+}
+
+
+
+button {
+    margin-top: 1rem;
+    margin-left: auto;
+    margin-right: auto;
+
+    width: 80%;
+
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+
+    font-size: larger;
+    font-weight: bolder;
+    color: #000000;
+
+    border-color: rgba(1, 90, 255, 0.75);
+    background: rgb(0, 225, 255);
+    background: radial-gradient(circle, rgb(0, 225, 255) 0%, rgba(26,120,231,1) 100%);
+}
+
+button:hover {
+    background: rgb(26,120,231);
+    background: radial-gradient(circle, rgb(26,120,231) 0%, rgba(0, 225, 255,1) 100%);
+}
+
+h2 {
+    font-size: 30pt;
+    font-weight: bolder;
+}
+
+h3{
+    margin-top: 2rem;
+    color: green;
+    font-size: larger;
+    font-weight: bolder;
+}
+
+h4 {
+    margin-top: 2rem;
+    color: red;
+    font-size: larger;
+    font-weight: bolder;
+}
+
+p {
+    font-size: larger;
+    font-weight: bolder;
+}
