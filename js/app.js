@@ -50,20 +50,24 @@ async function getQuestions(){
 function verify(num){
     if (!end) {
         if (quest[quest.length-1].getRightAnswer() === num){
-            document.getElementById("question").innerHTML += "<h3>Giusto!</h3>";
+            document.getElementById("title").innerHTML = "Trivia Master - Punti: "+points+" ✅";
             points+=10*timer;
         }
-        else document.getElementById("question").innerHTML += "<h4>Sbagliato!</h4>";
+        else document.getElementById("title").innerHTML = "Trivia Master - Punti: "+points+" ❌";
         end = true;
         quest.pop();
 
         setTimeout(next,1000)
-        document.getElementById("title").innerHTML="Trivia Master - Punti: "+points;
         clearTimeout(decrementTimer);
     }
 }
 
+function clearResult(){
+    document.getElementById("title").innerHTML="Trivia Master - Punti: "+points;
+}
+
 function next(){
+    clearResult();
     if (quest.length>0) loadQuestion();
     else getQuestions().then(r => loadQuestion());
 }

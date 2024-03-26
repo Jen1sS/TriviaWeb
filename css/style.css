@@ -103,10 +103,9 @@ h3{
 }
 
 h4 {
-    margin-top: 2rem;
     color: red;
-    font-size: larger;
     font-weight: bolder;
+    font-size: smaller;
 }
 
 p {

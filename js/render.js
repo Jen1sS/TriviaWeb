@@ -39,16 +39,18 @@ function initScene(){
 
     const g = new THREE.PlaneGeometry(0.5, 0.5, 1);
     const m = [
-        new THREE.MeshPhysicalMaterial({color: 0xC500FF, metalness: 1}),
-        new THREE.MeshPhysicalMaterial({color: 0xFF8700, metalness: 1}),
-        new THREE.MeshPhysicalMaterial({color: 0x0087FF, metalness: 1}),
-        new THREE.MeshPhysicalMaterial({color: 0x00FF08, metalness: 1}),
-        new THREE.MeshPhysicalMaterial({color: 0xFF008F, metalness: 1}),
-        new THREE.MeshPhysicalMaterial({color: 0xF3FF00, metalness: 1})
+        new THREE.MeshPhysicalMaterial({color: 0xC500FF}),
+        new THREE.MeshPhysicalMaterial({color: 0xFF8700}),
+        new THREE.MeshPhysicalMaterial({color: 0x0087FF}),
+        new THREE.MeshPhysicalMaterial({color: 0x00FF08}),
+        new THREE.MeshPhysicalMaterial({color: 0xFF008F}),
+        new THREE.MeshPhysicalMaterial({color: 0xF3FF00}),
+        new THREE.MeshPhysicalMaterial({color: 0xFFFFFF}),
+        new THREE.MeshPhysicalMaterial({color: 0xFFFFFF})
     ];
 
     let n= m.length;
-    let r = 1;
+    let r = 2;
     let p = [];
 
     for (let i = 0; i < n; i++) p.push([(Math.sin(i*2*Math.PI/n)*r)+(1.8*height/459),Math.cos(i*2*Math.PI/n)*r,i*Math.PI/n*2]);
