@@ -44,16 +44,20 @@ function initScene(){
         new THREE.MeshPhysicalMaterial({color: 0x0087FF}),
         new THREE.MeshPhysicalMaterial({color: 0x00FF08}),
         new THREE.MeshPhysicalMaterial({color: 0xFF008F}),
-        new THREE.MeshPhysicalMaterial({color: 0xF3FF00}),
-        new THREE.MeshPhysicalMaterial({color: 0xFFFFFF}),
-        new THREE.MeshPhysicalMaterial({color: 0xFFFFFF})
+        new THREE.MeshPhysicalMaterial({color: 0xF3FF00})
     ];
 
     let n= m.length;
     let r = 2;
+    let offy = 1.8*height/459;
     let p = [];
 
-    for (let i = 0; i < n; i++) p.push([(Math.sin(i*2*Math.PI/n)*r)+(1.8*height/459),Math.cos(i*2*Math.PI/n)*r,i*Math.PI/n*2]);
+    for (let i = 0; i < n; i++) {
+        let a = i * (2 * Math.PI / n);
+        let y = r * Math.cos(a);
+        let x = r * Math.sin(a);
+        p.push([y + offy,x,a]);
+    }
 
     for (let i = 0; i < n; i++) {
         boxes.push(new THREE.Mesh(g,m[i]))
@@ -68,8 +72,8 @@ function initScene(){
 
     }
 
-    dl = new THREE.PointLight(0xFFFFFF, 100);
-    dl.position.set(0, 0, -1);
+    dl = new THREE.PointLight(0xFFFFFF, 10);
+    dl.position.set(0, offy, -1);
     //dl.castShadow = true;
     scene.add(dl);
 
