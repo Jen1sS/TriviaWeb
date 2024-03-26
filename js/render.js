@@ -7,8 +7,7 @@ let scene = null;    // la scena radice
 let camera = null;   // la camera da cui renderizzare la scena
 let clock = null;    // Oggetto per la gestione del timinig della scena
 
-let box = null;
-let box2 = null;
+let boxes=[];
 
 let dl = null;
 
@@ -18,43 +17,57 @@ let dl = null;
 function initScene(){
     if (renderer != null) return;
 
-    document.body.innerHTML = "";
+    onloadSetup()
 
     let width = window.innerWidth;
-    let height = window.innerHeight;
+    let height = window.innerHeight*0.4;
 
     renderer = new THREE.WebGLRenderer({antialias: "true", powerPreference: "high-performance"});
     renderer.autoClear = false;
     renderer.setSize(width, height);
     renderer.setClearColor("black", 1);
     renderer.shadowMap.enabled = true;
-    document.body.appendChild(renderer.domElement);
+    document.getElementById("map").appendChild(renderer.domElement);
 
     camera = new THREE.PerspectiveCamera(50, width/height, 0.1, 500);
     camera.position.set(0, 1.80, -5);
     camera.lookAt(0, 1.80, 10);
-
     clock = new THREE.Clock();
 
     scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x7faa22);
+    scene.background = new THREE.Color(0xb5b6b6);
 
-    const g = new THREE.BoxGeometry(1, 1, 1);
-    const m = new THREE.MeshPhysicalMaterial({color: 0xFF00FF, metalness: 0, roughness: 0.5 });
-    box = new THREE.Mesh(g, m);
-    box.position.set(0, 1.80, 5);
-    box.castShadow = true;
-    box.receiveShadow = true;
-    scene.add(box);
+    const g = new THREE.PlaneGeometry(0.5, 0.5, 1);
+    const m = [
+        new THREE.MeshPhysicalMaterial({color: 0xC500FF, metalness: 1}),
+        new THREE.MeshPhysicalMaterial({color: 0xFF8700, metalness: 1}),
+        new THREE.MeshPhysicalMaterial({color: 0x0087FF, metalness: 1}),
+        new THREE.MeshPhysicalMaterial({color: 0x00FF08, metalness: 1}),
+        new THREE.MeshPhysicalMaterial({color: 0xFF008F, metalness: 1}),
+        new THREE.MeshPhysicalMaterial({color: 0xF3FF00, metalness: 1})
+    ];
 
-    box2 = new THREE.Mesh(g, m);
-    box2.position.set(4, 1.8, 5);
-    box2.castShadow = true;
-    box2.receiveShadow = true;
-    scene.add(box2);
+    let n= m.length;
+    let r = 1;
+    let p = [];
+
+    for (let i = 0; i < n; i++) p.push([(Math.sin(i*2*Math.PI/n)*r)+(1.8*height/459),Math.cos(i*2*Math.PI/n)*r,i*Math.PI/n*2]);
+
+    for (let i = 0; i < n; i++) {
+        boxes.push(new THREE.Mesh(g,m[i]))
+
+        boxes[i].castShadow = true;
+        boxes[i].receiveShadow = true;
+        scene.add(boxes[i]);
+        boxes[i].position.y=p[i][0];
+        boxes[i].position.x=p[i][1];
+        boxes[i].rotation.z=p[i][2];
+        boxes[i].rotation.y+=3.14;
+
+    }
 
     dl = new THREE.PointLight(0xFFFFFF, 100);
-    dl.position.set(0, 3, 4);
+    dl.position.set(0, 0, -1);
     //dl.castShadow = true;
     scene.add(dl);
 
@@ -64,10 +77,6 @@ function initScene(){
 function animate(){
     let dt = clock.getDelta();
 
-    box.rotateY(2*dt);
-    box2.rotateX(2*dt);
-
-    //dl.position.z += 0.5 * dt;
 
     renderer.clear();
     renderer.render(scene, camera);

@@ -84,7 +84,6 @@ function shuffle(ans){
 }
 
 function decrementTimer(){
-    console.log(timer)
     document.getElementById("timeBar").style.width=((timer-1)*10)+"%";
     if (timer<4) document.getElementById("timeBar").style.backgroundColor="red";
     if (timer===0){
