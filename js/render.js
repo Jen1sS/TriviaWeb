@@ -84,7 +84,7 @@ function initScene() {
 function animate() {
     let dt = clock.getDelta();
 
-    if (oldSpeed!==speed) oldSpeed+=2*dt;
+    if (oldSpeed<=speed) oldSpeed+=2*dt;
 
     p+=oldSpeed*dt
 
