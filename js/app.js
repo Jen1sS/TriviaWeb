@@ -1,8 +1,8 @@
 function onLoadSetup() {
-    getQuestions().then(r => loadQuestion());
 }
 
 function loadQuestion() {
+    started=true;
     const body = document.getElementById("container");
     end = false;
     timer = 10;
@@ -56,9 +56,14 @@ function verify(num) {
         end = true;
         quest.pop();
 
-        setTimeout(next, 1000)
         clearTimeout(decrementTimer);
+        setTimeout(hide,500)
     }
+}
+
+function hide(){
+    document.getElementById("question").style.display = "none";
+    ready=true;
 }
 
 function clearResult() {
@@ -69,6 +74,11 @@ function clearResult() {
 }
 
 function next() {
+    if (!started){
+        getQuestions().then(r => loadQuestion());
+        return;
+    }
+    ready=false;
     clearResult();
     if (quest.length > 0) loadQuestion();
     else getQuestions().then(r => loadQuestion());
@@ -99,6 +109,8 @@ function decrementTimer() {
     }
     timer--;
 }
+
+addEventListener("keypress", (event) => { if (event.key==="w" && ready) next()});
 
 
 class Question {
@@ -145,3 +157,5 @@ let timer;
 
 let speed = 0;
 let oldSpeed = 0;
+let ready=true;
+let started=false;
