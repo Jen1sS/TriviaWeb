@@ -2,7 +2,7 @@ function onLoadSetup() {
 }
 
 function loadQuestion() {
-    started=true;
+    started = true;
     const body = document.getElementById("container");
     end = false;
     timer = 10;
@@ -57,28 +57,27 @@ function verify(num) {
         quest.pop();
 
         clearTimeout(decrementTimer);
-        setTimeout(hide,500)
+        setTimeout(hide, 500)
     }
 }
 
-function hide(){
+function hide() {
     document.getElementById("question").style.display = "none";
-    ready=true;
+    curState="ROLLING";
 }
 
 function clearResult() {
     oldSpeed = speed;
-    speed = points/50;
+    speed = points / 50;
     changed = true;
     document.getElementById("title").innerHTML = "Trivia Master - Punti: " + points;
 }
 
 function next() {
-    if (!started){
+    if (!started) {
         getQuestions().then(r => loadQuestion());
         return;
     }
-    ready=false;
     clearResult();
     if (quest.length > 0) loadQuestion();
     else getQuestions().then(r => loadQuestion());
@@ -110,7 +109,18 @@ function decrementTimer() {
     timer--;
 }
 
-addEventListener("keypress", (event) => { if (event.key==="w" && ready) next()});
+function roll(){
+    positions = Math.floor(Math.random() * 6);
+    oldPos = positions;
+    curState="MOVING";
+}
+
+function ask() {
+    if (!asked) {
+        next();
+        asked = true;
+    }
+}
 
 
 class Question {
@@ -157,5 +167,10 @@ let timer;
 
 let speed = 0;
 let oldSpeed = 0;
-let ready=true;
-let started=false;
+let started = false;
+
+let positions = 0;
+let oldPos = 0;
+let asked = false;
+
+let curState="QUESTION";
