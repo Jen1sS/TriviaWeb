@@ -50,27 +50,58 @@ async function getQuestions() {
 function verify(num) {
     if (!end) {
         if (quest[quest.length - 1].getRightAnswer() === num) {
-            document.getElementById("title").innerHTML = "Trivia Master - Punti: " + points + " ✅";
+            document.getElementsByTagName("header").item(0).style.background = "radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(0,255,0,1) 100%)"
+            document.getElementById("points").style.color = "green";
             points += 10 * timer;
-        } else document.getElementById("title").innerHTML = "Trivia Master - Punti: " + points + " ❌";
+
+
+            //update stats bar
+            const tas = timer
+            let point;
+            switch (quest[quest.length - 1].getDifficulty()) {
+                case "hard":
+                    point = 30 * tas;
+                    break;
+                case "medium":
+                    point = 20 * tas;
+                    break;
+                case "easy":
+                    point = 10 * tas;
+                    break;
+
+            }
+            document.getElementById("points").innerHTML += " + " + point;
+            points += point;
+
+        } else {
+            document.getElementsByTagName("header").item(0).style.background = "radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(255,0,0,1) 100%)"
+            document.getElementById("points").style.color = "red";
+            document.getElementById("lives").style.color = "red";
+            document.getElementById("lives").innerHTML += " -1";
+
+            lives--;
+        }
         end = true;
         quest.pop();
 
         clearTimeout(decrementTimer);
-        setTimeout(hide, 500)
+        setTimeout(hide, 750)
     }
 }
 
 function hide() {
+    document.getElementsByTagName("header").item(0).style.background = "radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(0,117,255,1) 100%)"
     document.getElementById("question").style.display = "none";
-    curState="ROLLING";
+    document.getElementById("points").innerHTML = "Points: " + points;
+    document.getElementById("lives").innerHTML = "Lives: " + lives;
+    document.getElementById("points").style.color = "black";
+    document.getElementById("lives").style.color = "black";
+
+    curState = "ROLLING";
 }
 
 function clearResult() {
-    oldSpeed = speed;
-    speed = points / 50;
     changed = true;
-    document.getElementById("title").innerHTML = "Trivia Master - Punti: " + points;
 }
 
 function next() {
@@ -109,10 +140,10 @@ function decrementTimer() {
     timer--;
 }
 
-function roll(){
-    positions = Math.floor(Math.random() * 6);
+function roll() {
+    positions = Math.floor((Math.random() + 1) * 5);
     oldPos = positions;
-    curState="MOVING";
+    curState = "MOVING";
 }
 
 function ask() {
@@ -135,8 +166,6 @@ class Question {
         for (let i = 0; i < q.incorrect_answers.length; i++) this.answers.push(q.incorrect_answers[i]);
 
         this.answers = shuffle(this.answers);
-
-
     }
 
     getName() {
@@ -165,12 +194,13 @@ let end;
 let points = 0;
 let timer;
 
-let speed = 0;
-let oldSpeed = 0;
 let started = false;
 
 let positions = 0;
 let oldPos = 0;
 let asked = false;
 
-let curState="QUESTION";
+let curState = "QUESTION";
+
+//PLAYER
+let lives = 3;

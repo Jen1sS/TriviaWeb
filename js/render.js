@@ -11,7 +11,6 @@ let clock = null;    // Oggetto per la gestione del timinig della scena
 
 let p = [];
 let boxes = [];
-let player;
 let table;
 
 let dl = null;
@@ -22,6 +21,9 @@ let onTopOf = 0;
 
 
 let switc = false;
+
+//PLAYER
+let player;
 
 // LERPING
 let travelTime;
@@ -101,8 +103,6 @@ function initScene() {
         boxes[i].position.z = p[i][2];
         boxes[i].rotation.x = Math.PI / 2;
         scene.add(boxes[i]);
-
-
     }
 
     //player
@@ -165,17 +165,20 @@ function animate() {
     renderer.clear();
     renderer.render(scene, camera);
 
-
-    console.log(curState+" "+oldPos+" "+positions);
-    switch (curState){
-        case "ROLLING":
-            roll()
-            break;
-        case "QUESTION":
-            ask()
-        case "MOVING":
-            if (oldPos===positions) go()
-            break;
+    if (lives!==0) {
+        switch (curState) {
+            case "ROLLING":
+                roll()
+                break;
+            case "QUESTION":
+                ask()
+            case "MOVING":
+                if (oldPos === positions) go()
+                break;
+        }
+    } else {
+        document.getElementsByTagName("header").item(0).style.background = "radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(255,0,0,1) 100%)"
+        document.getElementById("lives").style.color = "red";
     }
 }
 
