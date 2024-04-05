@@ -15,32 +15,38 @@ let curState = "WAITING";
 let lives = 3;
 let onTopOf = 0;
 
+//DICE
+let dice;
+
+let animate;
+let timeA = 1;
+
 
 // caselle
 let c;
 
 
-async function getQuestions(color,number) {
+async function getQuestions(color, number) {
     let res;
-    switch (color){
+    switch (color) {
         case 0xd900ff: //VIOLA: Entertainment (Books, Films, Music, Musical & Theaters, Television, Board Games, Video Games
-            res=randBetween(16,10)+"";
+            res = randBetween(16, 10) + "";
             break;
         case 0x1e00ff: //BLU: General Knowledge
-            res="9";
+            res = "9";
             break;
         case 0x00f2ff: //AZZURRO: Mithology
-            res="20";
+            res = "20";
             break;
         case 0x00ff3c: // VERDE: Science & Nature, Computers, Math
-            res=randBetween(19,17);
+            res = randBetween(19, 17);
             break;
         case 0xfbff00: // GIALLO: History, Politics, Art
-            res=randBetween(25,23);
+            res = randBetween(25, 23);
             break;
     }
 
-    const response = await fetch("https://opentdb.com/api.php?amount="+number+"&category="+res);
+    const response = await fetch("https://opentdb.com/api.php?amount=" + number + "&category=" + res);
     const q = await response.json();
     quest = []
     for (let i = 0; i < q.results.length; i++) {
@@ -128,12 +134,12 @@ function hide() {
     document.getElementById("question").style.display = "none";
     document.getElementById("points").innerHTML = "Points: " + points;
     document.getElementById("points").style.color = "black";
-    document.getElementById("heartContainter").innerHTML="";
+    document.getElementById("heartContainter").innerHTML = "";
     for (let i = 0; i < lives; i++) {
-        document.getElementById("heartContainter").innerHTML+="<img src=\"img/heart.png\" class=\"heart\">\n"
+        document.getElementById("heartContainter").innerHTML += "<img src=\"img/heart.png\" class=\"heart\">\n"
     }
     for (let i = 0; i < 3 - lives; i++) {
-        document.getElementById("heartContainter").innerHTML+="<img src=\"img/heartMissing.png\" class=\"heart\">\n"
+        document.getElementById("heartContainter").innerHTML += "<img src=\"img/heartMissing.png\" class=\"heart\">\n"
     }
 
     curState = "ROLLING";
@@ -146,14 +152,13 @@ function clearResult() {
 function next() {
 
     if (!started) {
-        getQuestions(c[onTopOf],1).then(r => loadQuestion());
+        getQuestions(c[onTopOf], 1).then(r => loadQuestion());
         return;
     }
     clearResult();
     if (quest.length > 0) loadQuestion();
-    else getQuestions(c[onTopOf],1).then(r => loadQuestion());
+    else getQuestions(c[onTopOf], 1).then(r => loadQuestion());
 }
-
 
 
 function shuffle(ans) {
@@ -182,27 +187,31 @@ function decrementTimer() {
     timer--;
 }
 
-function randBetween(max,min){
+function randBetween(max, min) {
     return Math.floor(Math.random() * (max - min + 1) + min)
 }
 
 function roll() {
-    positions = randBetween(6,1);
+    positions = randBetween(6, 1);
+
+    //TODO: DADO CHE GIRA E RITORNO A POS + ORIENTAMENTO ORIGINALE
+
     oldPos = positions;
     curState = "MOVING";
-    document.getElementById("rolled").innerHTML="Rolled: "+positions;
+    document.getElementById("rolled").innerHTML = "Rolled: " + positions;
+    timeA = 1;
 }
 
 function ask() {
     if (!asked) {
-        setTimeout(next,1000)
+        setTimeout(next, 1000)
         asked = true;
     }
 }
 
-function startGame(){
-    curState="QUESTION"
-    document.getElementById("play").style.display="none"
+function startGame() {
+    curState = "QUESTION"
+    document.getElementById("play").style.display = "none"
 }
 
 

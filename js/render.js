@@ -13,7 +13,6 @@ let p = [];
 let boxes = [];
 let table;
 let throwSpace;
-let dice
 let dl = null;
 let dl2 = null;
 
@@ -30,12 +29,14 @@ let pos;
 let end;
 
 let reset;
-
+const loader = new THREE.TextureLoader();
 let endLook;
 let posLook;
-let oriLook=new Vector3(0,0,0);
+let diceLook;
+const oriLook=new Vector3(0,0,0);
 
 let r;
+
 
 
 /*
@@ -138,11 +139,22 @@ function initScene() {
 
     //Dice
     const g5 = new THREE.BoxGeometry(1,1,1)
-    const m5 = new THREE.MeshPhysicalMaterial({color: 0xFFFFFF})
-    dice=new THREE.Mesh(g5,m5);
-    dice.position.set(5,0,5);
+    const diceTexture = [
+        new THREE.MeshPhysicalMaterial({map: loadColorTexture('../img/dice/1.png')}),
+        new THREE.MeshPhysicalMaterial({map: loadColorTexture('../img/dice/2.png')}),
+        new THREE.MeshPhysicalMaterial({map: loadColorTexture('../img/dice/3.png')}),
+        new THREE.MeshPhysicalMaterial({map: loadColorTexture('../img/dice/4.png')}),
+        new THREE.MeshPhysicalMaterial({map: loadColorTexture('../img/dice/5.png')}),
+        new THREE.MeshPhysicalMaterial({map: loadColorTexture('../img/dice/6.png')}),
+    ];
+    dice=new THREE.Mesh(g5,diceTexture);
+    dice.position.set(12,4,6);
+
     dice.castShadow=true;
     dice.receiveShadow=true;
+
+    diceLook=new Vector3(dice.position.x,dice.position.y,dice.position.z);
+
 
 
     dl = new THREE.PointLight(0xFFFFFF, 80);
@@ -161,6 +173,13 @@ function initScene() {
 
     renderer.setAnimationLoop(animate);
     setTimeout(go, 100)
+}
+
+
+function loadColorTexture( path ) {
+    const texture = loader.load( path );
+    texture.colorSpace = THREE.SRGBColorSpace;
+    return texture;
 }
 
 function go() {
@@ -219,15 +238,21 @@ function lerpCamera(v1,v2,alpha){
 }
 
 function animate() {
+
     renderer.clear();
     renderer.render(scene, camera);
+
 
     if (lives !== 0) {
             switch (curState) {
             case "WAITING":
                 break;
             case "ROLLING":
-                roll()
+                if (timeA>=0){
+                    watchDice(timeA);
+                    timeA-=0.003;
+                }
+                //else roll();
                 break;
             case "QUESTION":
                 ask()
@@ -239,6 +264,13 @@ function animate() {
         document.getElementsByTagName("header").item(0).style.background = "radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(255,0,0,1) 100%)"
         document.getElementById("lives").style.color = "red";
     }
+}
+
+function watchDice(alpha){
+    console.log(oriLook.x+" "+oriLook.y+" "+oriLook.z)
+    console.log(diceLook.x+" "+diceLook.y+" "+diceLook.z)
+    lerpCamera(oriLook,diceLook,1-alpha)
+    camera.position.lerp(new Vector3(12,8,6),1-alpha)
 }
 
 addEventListener("keypress", (event) => {
