@@ -5,7 +5,6 @@
     <title>TriviaMaster</title>
 
     <script src="./js/app.js"></script>
-
     <script type="importmap">
         {
           "imports": {
@@ -14,6 +13,7 @@
         }
     </script>
     <script src="./js/render.js" type="module"></script>
+
 
 
     <link rel="stylesheet" href="./css/style.css">
@@ -31,9 +31,14 @@
         <h2 id="subTitle"> Stats: </h2>
         <hr>
         <div>
+            <div id="heartContainter">
+                <img src="img/heart.png" class="heart">
+                <img src="img/heart.png" class="heart">
+                <img src="img/heart.png" class="heart">
+            </div>
             <label id="points">Points: 0</label>
             <br>
-            <label id="lives">Lives: 3</label>
+            <label id="rolled">Rolled: 0</label>
         </div>
     </div>
     <div id="container"></div>

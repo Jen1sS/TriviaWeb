@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import {MeshPhysicalMaterial, Vector3} from "three";
 
+
 let gl = null;       // Il canvas in cui renderizzare
 let renderer = null; // Il motore di render
 
@@ -15,10 +16,6 @@ let throwSpace;
 let dice
 let dl = null;
 let dl2 = null;
-
-
-let onTopOf = 0;
-
 
 let switc = false;
 
@@ -68,7 +65,7 @@ function initScene() {
     scene = new THREE.Scene();
     scene.background = new THREE.Color(0xb5b6b6);
 
-    const c = [0xd900ff, 0x1e00ff, 0x00f2ff, 0x00ff3c, 0xfbff00, 0xff9100, 0xff0000, 0x1e00ff, 0x00f2ff, 0x00ff3c, 0xd900ff, 0x1e00ff, 0x00f2ff, 0x00ff3c, 0xfbff00, 0xff9100, 0xff0000, 0x1e00ff, 0x00f2ff, 0x00ff3c, 0xd900ff, 0x1e00ff, 0x00f2ff, 0x00ff3c, 0xfbff00, 0xff9100, 0xff0000, 0x1e00ff, 0x00f2ff, 0x00ff3c, 0xd900ff, 0x1e00ff, 0x00f2ff, 0x00ff3c]
+    c = [0xd900ff, 0x1e00ff, 0x00f2ff, 0x00ff3c, 0xfbff00, 0xd900ff, 0x1e00ff, 0x00f2ff, 0x00ff3c, 0xfbff00,0xd900ff, 0x1e00ff, 0x00f2ff, 0x00ff3c, 0xfbff00,0xd900ff, 0x1e00ff, 0x00f2ff, 0x00ff3c, 0xfbff00,0xd900ff, 0x1e00ff, 0x00f2ff, 0x00ff3c, 0xfbff00,0xd900ff, 0x1e00ff, 0x00f2ff, 0x00ff3c, 0xfbff00,0xd900ff, 0x1e00ff, 0x00f2ff, 0x00ff3c]
     const g = new THREE.PlaneGeometry(0.5, 0.5, 1);
     const m = [];
 
@@ -136,6 +133,7 @@ function initScene() {
     const m4 = new THREE.MeshPhysicalMaterial( {color: 0x33ADFF, side: THREE.DoubleSide} );
     throwSpace = new THREE.Mesh( g4, m4 );
     throwSpace.receiveShadow = true;
+    throwSpace.position.y=1.2
     throwSpace.rotateX(Math.PI/2)
 
     //Dice
@@ -175,8 +173,6 @@ function go() {
     } else {
         reset=false;
         if (positions !== 0) {
-            if (onTopOf === p.length - 2) onTopOf = 0;
-            else onTopOf++;
             player.position.set(p[onTopOf][0], p[onTopOf][1] + 0.25, p[onTopOf][2]);
 
             travelTime = 2;
@@ -185,6 +181,9 @@ function go() {
             start()
             positions--;
             asked = false;
+
+            if (onTopOf === p.length - 2) onTopOf = 0;
+            else onTopOf++;
 
         } else if (curState !== "WAITING") {
             curState = "QUESTION"
@@ -244,7 +243,6 @@ function animate() {
 
 addEventListener("keypress", (event) => {
     if (event.key === "s") switc = !switc;
-
     if (!switc) {
         camera.position.set(3.5, 8, 3.5);
         camera.lookAt(0, 0, 0);

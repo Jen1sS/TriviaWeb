@@ -1,4 +1,51 @@
-function onLoadSetup() {
+let quest;
+let end;
+let points = 0;
+let timer;
+
+let started = false;
+
+let positions = 0;
+let oldPos = 0;
+let asked = false;
+
+let curState = "WAITING";
+
+//PLAYER
+let lives = 3;
+let onTopOf = 0;
+
+
+// caselle
+let c;
+
+
+async function getQuestions(color,number) {
+    let res;
+    switch (color){
+        case 0xd900ff: //VIOLA: Entertainment (Books, Films, Music, Musical & Theaters, Television, Board Games, Video Games
+            res=randBetween(16,10)+"";
+            break;
+        case 0x1e00ff: //BLU: General Knowledge
+            res="9";
+            break;
+        case 0x00f2ff: //AZZURRO: Mithology
+            res="20";
+            break;
+        case 0x00ff3c: // VERDE: Science & Nature, Computers, Math
+            res=randBetween(19,17);
+            break;
+        case 0xfbff00: // GIALLO: History, Politics, Art
+            res=randBetween(25,23);
+            break;
+    }
+
+    const response = await fetch("https://opentdb.com/api.php?amount="+number+"&category="+res);
+    const q = await response.json();
+    quest = []
+    for (let i = 0; i < q.results.length; i++) {
+        quest.push(new Question(q.results[i]));
+    }
 }
 
 function loadQuestion() {
@@ -38,22 +85,11 @@ function loadQuestion() {
     setTimeout(decrementTimer, 1000);
 }
 
-async function getQuestions() {
-    const response = await fetch("https://opentdb.com/api.php?amount=10");
-    const q = await response.json();
-    quest = []
-    for (let i = 0; i < q.results.length; i++) {
-        quest.push(new Question(q.results[i]));
-    }
-}
-
 function verify(num) {
     if (!end) {
         if (quest[quest.length - 1].getRightAnswer() === num) {
             document.getElementsByTagName("header").item(0).style.background = "radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(0,255,0,1) 100%)"
             document.getElementById("points").style.color = "green";
-            points += 10 * timer;
-
 
             //update stats bar
             const tas = timer
@@ -76,8 +112,6 @@ function verify(num) {
         } else {
             document.getElementsByTagName("header").item(0).style.background = "radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(255,0,0,1) 100%)"
             document.getElementById("points").style.color = "red";
-            document.getElementById("lives").style.color = "red";
-            document.getElementById("lives").innerHTML += " -1";
 
             lives--;
         }
@@ -93,9 +127,14 @@ function hide() {
     document.getElementsByTagName("header").item(0).style.background = "radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(0,117,255,1) 100%)"
     document.getElementById("question").style.display = "none";
     document.getElementById("points").innerHTML = "Points: " + points;
-    document.getElementById("lives").innerHTML = "Lives: " + lives;
     document.getElementById("points").style.color = "black";
-    document.getElementById("lives").style.color = "black";
+    document.getElementById("heartContainter").innerHTML="";
+    for (let i = 0; i < lives; i++) {
+        document.getElementById("heartContainter").innerHTML+="<img src=\"img/heart.png\" class=\"heart\">\n"
+    }
+    for (let i = 0; i < 3 - lives; i++) {
+        document.getElementById("heartContainter").innerHTML+="<img src=\"img/heartMissing.png\" class=\"heart\">\n"
+    }
 
     curState = "ROLLING";
 }
@@ -105,14 +144,17 @@ function clearResult() {
 }
 
 function next() {
+
     if (!started) {
-        getQuestions().then(r => loadQuestion());
+        getQuestions(c[onTopOf],1).then(r => loadQuestion());
         return;
     }
     clearResult();
     if (quest.length > 0) loadQuestion();
-    else getQuestions().then(r => loadQuestion());
+    else getQuestions(c[onTopOf],1).then(r => loadQuestion());
 }
+
+
 
 function shuffle(ans) {
     let appeared = new Set();
@@ -140,15 +182,20 @@ function decrementTimer() {
     timer--;
 }
 
+function randBetween(max,min){
+    return Math.floor(Math.random() * (max - min + 1) + min)
+}
+
 function roll() {
-    positions = Math.floor(Math.random() * (6 - 1 + 1) + 1);
+    positions = randBetween(6,1);
     oldPos = positions;
     curState = "MOVING";
+    document.getElementById("rolled").innerHTML="Rolled: "+positions;
 }
 
 function ask() {
     if (!asked) {
-        next();
+        setTimeout(next,1000)
         asked = true;
     }
 }
@@ -193,19 +240,3 @@ class Question {
         return this.rightAnswers;
     }
 }
-
-let quest;
-let end;
-let points = 0;
-let timer;
-
-let started = false;
-
-let positions = 0;
-let oldPos = 0;
-let asked = false;
-
-let curState = "WAITING";
-
-//PLAYER
-let lives = 3;
