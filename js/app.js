@@ -129,6 +129,7 @@ function verify(num) {
     }
 }
 
+
 function hide() {
     document.getElementsByTagName("header").item(0).style.background = "radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(0,117,255,1) 100%)"
     document.getElementById("question").style.display = "none";
@@ -191,19 +192,81 @@ function randBetween(max, min) {
     return Math.floor(Math.random() * (max - min + 1) + min)
 }
 
+
+let time = randBetween(5, 1);
+let dt2;
+let rolled = false;
+let active=false
+let id;
+
 function roll() {
-    positions = randBetween(6, 1);
+    if (!rolled) {
+        if (!active){
+            id=setInterval(decrement, 1000);
+            active=!active;
+        }
 
-    //TODO: DADO CHE GIRA E RITORNO A POS + ORIENTAMENTO ORIGINALE
+        let speed = randBetween(1000, 500);
 
-    oldPos = positions;
-    curState = "MOVING";
-    document.getElementById("rolled").innerHTML = "Rolled: " + positions;
-    timeA = 1;
+        if (time === 0 || rolled) {
+            time = randBetween(5, 1);
+            clearTimeout(id);
+            rolled = true;
+            active=false;
+            straighten()
+        } else {
+            switch (randBetween(2, 0)) {
+                case 0:
+                    dice.rotation.x += speed * dt2;
+                    break;
+                case 1:
+                    dice.rotation.y += speed * dt2;
+                    break;
+                case 2:
+                    dice.rotation.z += speed * dt2;
+                    break;
+            }
+        }
+    } else if (rolled && !done) straighten();
+    else {
+        //TODO: CAMERA TORNA A POS ORIGINALE
+        positions=randBetween(6,1);
+        console.log(positions)
+        oldPos = positions;
+        curState = "MOVING";
+        document.getElementById("rolled").innerHTML = "Rolled: " + positions;
+        timeA = 1;
+    }
+
+}
+
+function decrement() {
+    time--
+}
+
+
+let done = false;
+let precision=0.01
+
+function straighten() {
+    //TODO: FARE IN MODO CHE IL DADO NON TORNI SEMPRE SUL 3 (quindi che torni ad un angolo multiplo di π/2 credo (chiedo a rossani domani))
+    if (Math.abs(dice.rotation.x) < precision && Math.abs(dice.rotation.y) < precision && Math.abs(dice.rotation.z) < precision) {
+        dice.rotation.x = 0;
+        dice.rotation.y = 0;
+        dice.rotation.z = 0;
+        done = true;
+    } else {
+        dice.rotation.z += (dice.rotation.z * -1) * dt2;
+        dice.rotation.y += (dice.rotation.y * -1) * dt2;
+        dice.rotation.x += (dice.rotation.x * -1) * dt2;
+    }
 }
 
 function ask() {
     if (!asked) {
+        rolled = false;
+        active=false;
+        done=false;
         setTimeout(next, 1000)
         asked = true;
     }

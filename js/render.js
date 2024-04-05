@@ -14,7 +14,6 @@ let boxes = [];
 let table;
 let throwSpace;
 let dl = null;
-let dl2 = null;
 
 let switc = false;
 
@@ -238,6 +237,7 @@ function lerpCamera(v1,v2,alpha){
 }
 
 function animate() {
+    dt2 = clock.getDelta();
 
     renderer.clear();
     renderer.render(scene, camera);
@@ -248,11 +248,11 @@ function animate() {
             case "WAITING":
                 break;
             case "ROLLING":
+                posLook=diceLook;
                 if (timeA>=0){
                     watchDice(timeA);
                     timeA-=0.003;
-                }
-                //else roll();
+                } else roll();
                 break;
             case "QUESTION":
                 ask()
@@ -262,13 +262,10 @@ function animate() {
         }
     } else {
         document.getElementsByTagName("header").item(0).style.background = "radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(255,0,0,1) 100%)"
-        document.getElementById("lives").style.color = "red";
     }
 }
 
 function watchDice(alpha){
-    console.log(oriLook.x+" "+oriLook.y+" "+oriLook.z)
-    console.log(diceLook.x+" "+diceLook.y+" "+diceLook.z)
     lerpCamera(oriLook,diceLook,1-alpha)
     camera.position.lerp(new Vector3(12,8,6),1-alpha)
 }
