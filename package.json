@@ -12,6 +12,10 @@
   },
   "private": true,
   "dependencies": {
+    "math": "^0.0.3",
     "three": "^0.162.0"
+  },
+  "devDependencies": {
+    "cannon-es": "^0.20.0"
   }
 }

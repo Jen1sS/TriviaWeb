@@ -141,7 +141,7 @@ function decrementTimer() {
 }
 
 function roll() {
-    positions = Math.floor((Math.random() + 1) * 5);
+    positions = Math.floor(Math.random() * (6 - 1 + 1) + 1);
     oldPos = positions;
     curState = "MOVING";
 }
@@ -151,6 +151,11 @@ function ask() {
         next();
         asked = true;
     }
+}
+
+function startGame(){
+    curState="QUESTION"
+    document.getElementById("play").style.display="none"
 }
 
 
@@ -200,7 +205,7 @@ let positions = 0;
 let oldPos = 0;
 let asked = false;
 
-let curState = "QUESTION";
+let curState = "WAITING";
 
 //PLAYER
 let lives = 3;

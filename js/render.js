@@ -1,7 +1,6 @@
 import * as THREE from 'three';
 import {MeshPhysicalMaterial, Vector3} from "three";
 
-
 let gl = null;       // Il canvas in cui renderizzare
 let renderer = null; // Il motore di render
 
@@ -12,12 +11,13 @@ let clock = null;    // Oggetto per la gestione del timinig della scena
 let p = [];
 let boxes = [];
 let table;
-
+let throwSpace;
+let dice
 let dl = null;
+let dl2 = null;
 
 
 let onTopOf = 0;
-
 
 
 let switc = false;
@@ -27,13 +27,19 @@ let player;
 
 // LERPING
 let travelTime;
+let backTime=0;
 let beg;
 let pos;
 let end;
 
+let reset;
+
+let endLook;
+let posLook;
+let oriLook=new Vector3(0,0,0);
+
 let r;
 
-let going=false;
 
 /*
  * Inizializza il motore
@@ -41,10 +47,9 @@ let going=false;
 function initScene() {
     if (renderer != null) return;
 
-    onLoadSetup();
 
     let width = window.innerWidth;
-    let height = window.innerHeight * 0.8;
+    let height = window.innerHeight * 0.9;
 
     renderer = new THREE.WebGLRenderer({antialias: "true", powerPreference: "high-performance"});
     renderer.autoClear = false;
@@ -53,9 +58,9 @@ function initScene() {
     renderer.shadowMap.enabled = true;
     document.getElementById("map").appendChild(renderer.domElement);
 
-    camera = new THREE.PerspectiveCamera(50, width / height, 0.1, 500);
+    camera = new THREE.PerspectiveCamera(70, width / height, 0.1, 500);
     // [asse horizontal, asse profundity, asse altercate]
-    camera.position.set(3.5, 8, 3.5);
+    camera.position.set(3.5, 7.5, 3.5);
     camera.lookAt(0, 0, 0);
     clock = new THREE.Clock();
 
@@ -96,7 +101,7 @@ function initScene() {
     for (let i = 0; i < n; i++) {
         boxes.push(new THREE.Mesh(g, m[i]))
 
-        boxes[i].castShadow = true;
+        boxes[i].castShadow = false;
         boxes[i].receiveShadow = true;
         boxes[i].position.y = p[i][1];
         boxes[i].position.x = p[i][0];
@@ -107,66 +112,121 @@ function initScene() {
 
     //player
     const g2 = new THREE.CylinderGeometry(0.125, 0.125, 0.25, 32);
-    const m2 = new THREE.MeshPhysicalMaterial({color: 'white', metalness: 0.5});
+    const m2 = new THREE.MeshPhysicalMaterial({color: 0xFF00E8, metalness: 0.5});
     player = new THREE.Mesh(g2, m2);
     player.position.set(p[onTopOf][0], p[onTopOf][1] + 0.25, p[onTopOf][2])
     player.castShadow = true;
     player.receiveShadow = true;
-    scene.add(player);
     travelTime = 1.0;
 
 
-    //tabellone
-    const g3 = new THREE.BoxGeometry(5.2, 5.7, 0.5);
-    const m3 = new THREE.MeshPhysicalMaterial({color: 0xAAAAAA});
+    //Tabellone
+    const g3 = new THREE.BoxGeometry(5.2, 5.5, 0.5);
+    const m3 = new THREE.MeshPhysicalMaterial({color: 0x7FD4FF});
     table = new THREE.Mesh(g3, m3);
     table.castShadow = true;
     table.receiveShadow = true;
     table.rotateX(Math.PI / 2);
-    table.position.x=0.03
-    table.position.z=0.15
-    table.position.y = 1.49
-    scene.add(table);
+    table.position.x = 0.125
+    table.position.z = 0.2
+    table.position.y = 1.74
 
-    dl = new THREE.PointLight(0xFFFFFF, 30);
-    dl.position.set(0, 3, 0);
-    //dl.castShadow = true;
+    //Posto dove si lanciano di dadi
+    const g4 = new THREE.PlaneGeometry( 10000, 10000 );
+    const m4 = new THREE.MeshPhysicalMaterial( {color: 0x33ADFF, side: THREE.DoubleSide} );
+    throwSpace = new THREE.Mesh( g4, m4 );
+    throwSpace.receiveShadow = true;
+    throwSpace.rotateX(Math.PI/2)
+
+    //Dice
+    const g5 = new THREE.BoxGeometry(1,1,1)
+    const m5 = new THREE.MeshPhysicalMaterial({color: 0xFFFFFF})
+    dice=new THREE.Mesh(g5,m5);
+    dice.position.set(5,0,5);
+    dice.castShadow=true;
+    dice.receiveShadow=true;
+
+
+    dl = new THREE.PointLight(0xFFFFFF, 80);
+    dl.position.set(0, 10, 0);
+    dl.castShadow = true;
+
     scene.add(dl);
+    scene.add(throwSpace);
+    scene.add(table);
+    scene.add(player);
+    scene.add(dice)
+
+    posLook = new Vector3(0,0,0);
+
+
 
     renderer.setAnimationLoop(animate);
     setTimeout(go, 100)
 }
 
 function go() {
-    if (positions!==0) {
-        if (onTopOf === p.length - 2) onTopOf = 0;
-        else onTopOf++;
-        player.position.set(p[onTopOf][0], p[onTopOf][1] + 0.25, p[onTopOf][2]);
+    if (reset && backTime<=1 && positions===0){
+        backTime+=0.02;
+        resetCamera(backTime);
+        setTimeout(go,10);
+        posLook=oriLook
 
-        travelTime = 1;
-        pos = (onTopOf + 1) % (p.length - 2);
-        end = new Vector3(p[pos][0], p[pos][1] + 0.25, p[pos][2]);
-        start()
-        positions--;
-        asked = false;
+    } else {
+        reset=false;
+        if (positions !== 0) {
+            if (onTopOf === p.length - 2) onTopOf = 0;
+            else onTopOf++;
+            player.position.set(p[onTopOf][0], p[onTopOf][1] + 0.25, p[onTopOf][2]);
 
-    } else curState="QUESTION";
+            travelTime = 2;
+            pos = (onTopOf + 1) % (p.length - 2);
+            end = new Vector3(p[pos][0], p[pos][1] + 0.25, p[pos][2]);
+            start()
+            positions--;
+            asked = false;
+
+        } else if (curState !== "WAITING") {
+            curState = "QUESTION"
+        }
+    }
 }
 
 function start() {
-    player.position.lerp(end, 1 - travelTime);
-    travelTime -= 0.1;
+    backTime=0;
+    reset=true
+    if (travelTime<=1) {
+        player.position.lerp(end, 1 - travelTime);
+        travelTime -= 0.1;
+        posLook=player.position;
+        camera.lookAt(posLook)
+    } else {
+        endLook=player.position;
+        lerpCamera(posLook,endLook,2-travelTime);
+        travelTime-=0.02;
+    }
 
-    if (travelTime >= 0) setTimeout(start, 10);
-    else setTimeout(go,1000);
+    if (travelTime >= 0) setTimeout(start, 5);
+    else setTimeout(go, 500);
+}
+
+function resetCamera(alpha){
+    lerpCamera(player.position,oriLook,alpha)
+}
+function lerpCamera(v1,v2,alpha){
+    let currentLookAt = new THREE.Vector3();
+    currentLookAt.lerpVectors(v1, v2, alpha);
+    camera.lookAt(currentLookAt);
 }
 
 function animate() {
     renderer.clear();
     renderer.render(scene, camera);
 
-    if (lives!==0) {
-        switch (curState) {
+    if (lives !== 0) {
+            switch (curState) {
+            case "WAITING":
+                break;
             case "ROLLING":
                 roll()
                 break;
