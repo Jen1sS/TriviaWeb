@@ -285,6 +285,7 @@ function straighten() {
         dice.rotation.z = rotasions[positions][2];
         done = true;
     }
+
 }
 
 function ask() {
