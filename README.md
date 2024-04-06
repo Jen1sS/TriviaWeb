@@ -1,3 +1,3 @@
 <h1> TODO: </h1>
-  - METTERE APPOSTO CODICE O PRENDO IL CAZZO
-    <br>
+<hr>
+- Niente
