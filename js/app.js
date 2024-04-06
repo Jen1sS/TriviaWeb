@@ -1,3 +1,4 @@
+
 let quest;
 let end;
 let points = 0;
@@ -147,7 +148,7 @@ function hide() {
 }
 
 function clearResult() {
-    changed = true;
+    //changed = true;
 }
 
 function next() {
@@ -195,24 +196,27 @@ function randBetween(max, min) {
 
 let time = randBetween(5, 1);
 let dt2;
+let cumt;
 let rolled = false;
-let active=false
+let active = false
 let id;
 
 function roll() {
     if (!rolled) {
-        if (!active){
-            id=setInterval(decrement, 1000);
-            active=!active;
+        if (!active) {
+            id = setInterval(decrement, 1000);
+            positions = randBetween(6, 1);
+            active = !active;
+            first = false;
         }
 
-        let speed = randBetween(1000, 500);
+        let speed = randBetween(100, 50);
 
-        if (time === 0 || rolled) {
+        if (time === 0) {
             time = randBetween(5, 1);
             clearTimeout(id);
             rolled = true;
-            active=false;
+            active = false;
             straighten()
         } else {
             switch (randBetween(2, 0)) {
@@ -230,8 +234,6 @@ function roll() {
     } else if (rolled && !done) straighten();
     else {
         //TODO: CAMERA TORNA A POS ORIGINALE
-        positions=randBetween(6,1);
-        console.log(positions)
         oldPos = positions;
         curState = "MOVING";
         document.getElementById("rolled").innerHTML = "Rolled: " + positions;
@@ -246,27 +248,50 @@ function decrement() {
 
 
 let done = false;
-let precision=0.01
+const precision = 0.01
+let first = false;
+let or;
+
+
+const rotasions = {
+    1: [0, 0, Math.PI * 0.5], // ok
+    2: [0, 0, Math.PI * 1.5], // ok
+    3: [0, 0, 0], // ok
+    4: [Math.PI, 0, 0], // ok
+    5: [Math.PI * 1.5, 0, 0], // ok
+    6: [Math.PI * 0.5, 0, 0], // ok
+}
+
+function erp(from, to, progress) { // 5 is temp
+    return Math.exp(-5*progress)*(from-to) + to;
+}
 
 function straighten() {
-    //TODO: FARE IN MODO CHE IL DADO NON TORNI SEMPRE SUL 3 (quindi che torni ad un angolo multiplo di π/2 credo (chiedo a rossani domani))
-    if (Math.abs(dice.rotation.x) < precision && Math.abs(dice.rotation.y) < precision && Math.abs(dice.rotation.z) < precision) {
-        dice.rotation.x = 0;
-        dice.rotation.y = 0;
-        dice.rotation.z = 0;
-        done = true;
+    if (!first) {
+        first = true;
+        cumt = 0;
+        or = [dice.rotation.x, dice.rotation.y, dice.rotation.z]
+    }
+
+    cumt += dt2;
+
+    if(cumt < 7) {
+        dice.rotation.x = erp(or[0], rotasions[positions][0], cumt/5);
+        dice.rotation.y = erp(or[1], rotasions[positions][1], cumt/5);
+        dice.rotation.z = erp(or[2], rotasions[positions][2], cumt/5);
     } else {
-        dice.rotation.z += (dice.rotation.z * -1) * dt2;
-        dice.rotation.y += (dice.rotation.y * -1) * dt2;
-        dice.rotation.x += (dice.rotation.x * -1) * dt2;
+        dice.rotation.x = rotasions[positions][0];
+        dice.rotation.y = rotasions[positions][1];
+        dice.rotation.z = rotasions[positions][2];
+        done = true;
     }
 }
 
 function ask() {
     if (!asked) {
         rolled = false;
-        active=false;
-        done=false;
+        active = false;
+        done = false;
         setTimeout(next, 1000)
         asked = true;
     }
