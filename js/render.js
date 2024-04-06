@@ -28,7 +28,7 @@ let player;
 //Visuali della camera necessarie per lerping
 let endLook;
 let posLook;
-const diceLook=new Vector3(12,4,6);
+const diceLook = new Vector3(12, 4, 6);
 const oriLook = new Vector3(0, 0, 0);
 
 
@@ -83,8 +83,8 @@ function initScene() {
     }))
 
     //Creazione coordinate caselle
-    for (let i=0;i<c.length;i++){
-        switch (Math.floor(i/9)) {
+    for (let i = 0; i < c.length; i++) {
+        switch (Math.floor(i / 9)) {
             case 0:
                 p.push([(i / 2) - (c.length / 18), 2, 2.5]);
                 break;
@@ -92,7 +92,7 @@ function initScene() {
                 p.push([p[8][0], 2, (p[8][2]) - ((i - 8) / 2)]);
                 break;
             case 2:
-                if (i===26) p.push([p[25][0], 2, (p[25][2]) + ((i - 25) / 2)]);
+                if (i === 26) p.push([p[25][0], 2, (p[25][2]) + ((i - 25) / 2)]);
                 else p.push([(p[17][0]) - ((i - 17) / 2), 2, p[17][2]]);
                 break;
             case 3:
@@ -216,7 +216,7 @@ function loadColorTexture(path) {
 
 //GESTIONE MOVIMENTO
 function go() {
-    if (reset && backTime <= 1 && positions === 0) curState="TRTCENTRE";
+    if (reset && backTime <= 1 && positions === 0) curState = "TRTCENTRE";
     else {
         reset = false;
         if (positions !== 0) {
@@ -264,11 +264,13 @@ function start() {
 function resetCamera(alpha) {
     lerpCamera(player.position, oriLook, alpha)
 }
+
 function lerpCamera(v1, v2, alpha) {
     let currentLookAt = new THREE.Vector3();
     currentLookAt.lerpVectors(v1, v2, alpha);
     camera.lookAt(currentLookAt);
 }
+
 function watchDice(alpha) {
     lerpCamera(oriLook, diceLook, 1 - alpha)
     camera.position.lerp(new Vector3(12, 8, 6), 1 - alpha)
@@ -280,17 +282,6 @@ function animate() {
 
     renderer.clear();
     renderer.render(scene, camera);
-
-
-    //CHECK VITTORIA
-    if (curState !== "WIN") {
-        let r = true;
-        for (let i = 0; i < 5; i++) {
-            r = r && completed[c[i]];
-        }
-        if (r) curState = "WIN";
-    }
-
 
     if (lives !== 0) {
         //AUTOMA A STATI FINITI
@@ -305,7 +296,7 @@ function animate() {
                 if (timeA >= 0) {
                     watchDice(timeA);
                     timeA -= 0.003;
-                } else curState="ROLLING";
+                } else curState = "ROLLING";
                 break;
             case "ROLLING":
                 roll();
@@ -316,25 +307,39 @@ function animate() {
                 if (oldPos === positions) go()
                 break;
             case "TRTCENTRE":
-                if (backTime<=1) {
+                if (backTime <= 1) {
                     backTime += 0.02;
                     resetCamera(backTime);
                     posLook = oriLook;
-                } else curState="QUESTION";
+                } else curState = "QUESTION";
                 break;
             case "WIN":
-                alert("vinto")
                 break;
         }
     } else {
         document.getElementsByTagName("header").item(0).style.background = "radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(255,0,0,1) 100%)"
+        for (let i = 0; i < 5; i++) slice[c[i]].position.y -= 0.005;
+        if (dl.position.y < 50) {
+            dl.position.y += 0.05;
+            dl2.position.y += 0.05;
+        } else {
+            setTimeout(()=>{document.getElementById("retry").style.display="block";},1000)
+        }
     }
 }
 
 //REVEAL DEL SLICE DELLA MATERIA FATTA
 function revealGuessed() {
-    if (slice[color].position.y >= 2) curState = "TRTDICE";
-    else slice[color].position.y += 0.005;
+    if (slice[color].position.y >= 2) {
+        curState = "TRTDICE";
+
+        //CHECK VITTORIA
+        let r = true;
+        for (let i = 0; i < 5; i++) {
+            r = r && completed[c[i]];
+        }
+        if (r) curState = "WIN";
+    } else slice[color].position.y += 0.005;
 }
 
 

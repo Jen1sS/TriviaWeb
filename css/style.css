@@ -139,13 +139,29 @@ p {
     font-weight: bolder;
 }
 
-button#play{
+button.game{
     position: absolute;
     left: 25vw;
     bottom: 10vh;
     width: 50vw;
     border-radius: 1rem;
 }
+
+button#play{}
+
+button#retry{
+    padding-top: 2vh;
+    bottom: 50vh;
+    border-color: rgba(166, 0, 0, 0.75);
+    background: rgb(255, 0, 0);
+    background: radial-gradient(circle, rgb(255, 0, 0) 0%, rgb(129, 0, 0) 100%);
+    display: none;
+}
+
+button#retry:hover {
+    border-color: rgba(166, 0, 0, 0.75);
+    background: radial-gradient(circle, rgb(129, 0, 0) 0%, rgb(255, 0, 0) 100%);}
+
 
 label {
     font-weight: bolder;
