@@ -32,9 +32,10 @@
         <hr>
         <div>
             <div id="heartContainter">
-                <img src="img/heart.png" class="heart">
-                <img src="img/heart.png" class="heart">
-                <img src="img/heart.png" class="heart">
+                <script>
+                    totalLives = lives;
+                    for (let i = 0; i < lives; i++) document.getElementById("heartContainter").innerHTML += "<img src=\"img/heart.png\" class=\"heart\">\n"
+                </script>
             </div>
             <label id="points">Points: 0</label>
             <br>
