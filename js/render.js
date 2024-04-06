@@ -31,6 +31,7 @@ let posLook;
 const diceLook = new Vector3(12, 4, 6);
 const oriLook = new Vector3(0, 0, 0);
 
+let did=false //WIN
 
 // LERPING
 let travelTime;
@@ -314,6 +315,22 @@ function animate() {
                 } else curState = "QUESTION";
                 break;
             case "WIN":
+                if (dl.position.y > 3) {
+                    dl.position.y -= 0.005;
+                    dl2.position.y -= 0.005;
+                } else if (!did){
+                    document.getElementsByTagName("header").item(0).style.background = "radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(255,201,0,1) 100%)";
+                    document.getElementsByTagName("header").item(0).innerHTML= "<img src=\"img/win.png\" alt=\"title\">";
+
+                    for (let i = 0; i < lives; i++) document.getElementById("heartContainter").innerHTML="";
+                    for (let i = 0; i < lives; i++) document.getElementById("heartContainter").innerHTML += "<img src=\"img/winHeart.png\" class=\"heart\">\n";
+
+                    document.getElementById("playerStats").style.background="rgb(255,243,124)";
+                    document.getElementById("playerStats").style.background="linear-gradient(145deg, rgba(255,243,124,1) 0%, rgba(255,192,0,1) 100%)";
+
+
+                    did=!did;
+                }
                 break;
         }
     } else {
