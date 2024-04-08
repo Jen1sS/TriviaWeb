@@ -43,6 +43,10 @@ let reset;
 const loader = new THREE.TextureLoader();
 
 
+
+
+
+
 /*
  * Inizializza il motore e il gioco
  */
@@ -144,6 +148,9 @@ function initScene() {
     plane.position.y = 1.2
     plane.rotateX(Math.PI / 2)
 
+
+
+
     //CREAZIONE DADO
     const g5 = new THREE.BoxGeometry(1, 1, 1)
     const diceTexture = [
@@ -159,7 +166,6 @@ function initScene() {
 
     dice.castShadow = true;
     dice.receiveShadow = true;
-
 
     //CREAZIONE SLICE (1 per categoria)
     const angle = 2 * Math.PI / 5;
@@ -357,6 +363,14 @@ function revealGuessed() {
         }
         if (r) curState = "WIN";
     } else slice[color].position.y += 0.005;
+}
+
+window.addEventListener('resize', onWindowResize, false)
+function onWindowResize() {
+    camera.aspect = window.innerWidth / window.innerHeight
+    camera.updateProjectionMatrix()
+    renderer.setSize(window.innerWidth, window.innerHeight)
+    render()
 }
 
 

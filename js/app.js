@@ -13,7 +13,7 @@ let curState = "WAITING";
 
 //PLAYER
 let totalLives;
-let lives = 3;
+let lives = 4;
 let position = 0;
 let completed = {0xd900ff: false, 0x1e00ff: false, 0x00f2ff: false, 0x00ff3c: false, 0xfbff00: false}
 let oldPos = 0; //ultima posizione
