@@ -1,5 +1,5 @@
-import * as THREE from 'three';
-import {MeshPhysicalMaterial, Vector3} from "three";
+import * as THREE from "three";
+import {MeshPhysicalMaterial, Vector3} from 'three';
 
 //Necessari per ThreeJs
 let gl = null;       // Il canvas in cui renderizzare
