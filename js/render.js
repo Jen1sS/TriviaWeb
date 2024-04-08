@@ -1,6 +1,6 @@
-import * as THREE from "three";
+import * as THREE from 'three';
+import * as CANNON from '../node_modules/cannon-es/dist/cannon-es.js'
 import {MeshPhysicalMaterial, Vector3} from 'three';
-
 //Necessari per ThreeJs
 let gl = null;       // Il canvas in cui renderizzare
 let renderer = null; // Il motore di render
