@@ -294,8 +294,7 @@ function roll() {
     if (!rolled) {
         if (!active) {
             id = setInterval(decrement, 1000);
-            //positions = randBetween(6, 1);
-            positions=1
+            positions = randBetween(6, 1);
             active = !active;
             first = false;
         }
