@@ -31,12 +31,12 @@ let done = false;
 let first = false;
 let or;
 const rotations = { // faccie dado
-    1: [0, 0, Math.PI * 0.5],
-    2: [0, 0, Math.PI * 1.5],
+    1: [0, Math.PI*0.5, Math.PI * 1.5],
+    2: [Math.PI*0.5, Math.PI*0.5, Math.PI * 0.5], //no
     3: [0, 0, 0],
-    4: [Math.PI, 0, 0],
-    5: [Math.PI * 1.5, 0, 0],
-    6: [Math.PI * 0.5, 0, 0],
+    4: [Math.PI*0.5, Math.PI*0.5, Math.PI * 0.5],
+    5: [Math.PI*0.5, 0, Math.PI * 1.5],
+    6: [0, 0, Math.PI * 0.5],
 }
 
 //DICE
@@ -295,7 +295,8 @@ function roll() {
     if (!rolled) {
         if (!active) {
             id = setInterval(decrement, 1000);
-            positions = randBetween(6, 1);
+            //positions = randBetween(6, 1);
+            positions=2;
             active = !active;
             first = false;
         }

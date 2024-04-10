@@ -1,6 +1,8 @@
 import * as THREE from 'three';
-import * as CANNON from '../node_modules/cannon-es/dist/cannon-es.js'
+import {GLTFLoader} from "gltf";
+import {AnimationMixer} from "three";
 import {MeshPhysicalMaterial, Vector3} from 'three';
+
 //Necessari per ThreeJs
 let gl = null;       // Il canvas in cui renderizzare
 let renderer = null; // Il motore di render
@@ -41,6 +43,12 @@ let end;
 
 let reset;
 const loader = new THREE.TextureLoader();
+
+//DICE
+const loaderGLTF = new GLTFLoader();
+let mixer = THREE.AnimationMixer;
+let loaded=false;
+let added=false;
 
 
 
@@ -151,8 +159,8 @@ function initScene() {
 
 
 
-    //CREAZIONE DADO
-    const g5 = new THREE.BoxGeometry(1, 1, 1)
+    //CREAZIONE DADO - OLD
+    /*const g5 = new THREE.BoxGeometry(1, 1, 1)
     const diceTexture = [
         new THREE.MeshPhysicalMaterial({map: loadColorTexture('../img/dice/1.png')}),
         new THREE.MeshPhysicalMaterial({map: loadColorTexture('../img/dice/2.png')}),
@@ -161,11 +169,35 @@ function initScene() {
         new THREE.MeshPhysicalMaterial({map: loadColorTexture('../img/dice/5.png')}),
         new THREE.MeshPhysicalMaterial({map: loadColorTexture('../img/dice/6.png')}),
     ];
-    dice = new THREE.Mesh(g5, diceTexture);
-    dice.position.set(12, 4, 6);
+        dice = new THREE.Mesh(g5, diceTexture);
+     */
 
-    dice.castShadow = true;
-    dice.receiveShadow = true;
+    //CREAZIONE DADO - NEW
+    loaderGLTF.load(
+        // resource URL
+        '../models/untitled.glb',
+        // called when the resource is loaded
+        (modello) => {
+            dice = modello.scene;
+            dice.rotation.y += Math.PI;
+            dice.scale.x=0.03;
+            dice.scale.z=0.03;
+            dice.scale.y=0.03;
+
+            mixer = new AnimationMixer(dice)
+            loaded=true;
+        },
+        // called while loading is progressing
+        (xhr) => {
+            if (xhr.loaded === xhr.total) {
+                console.log("loaded dice.glb")
+            } else if (xhr.loaded < xhr.total) console.log("loading dice.glb")
+        },
+        // called when loading has errors
+        (error) => {
+            console.log(error);
+        }
+    );
 
     //CREAZIONE SLICE (1 per categoria)
     const angle = 2 * Math.PI / 5;
@@ -204,7 +236,6 @@ function initScene() {
     scene.add(plane);
     scene.add(table);
     scene.add(player);
-    scene.add(dice)
 
     //Inizializzazione visuale per lerp
     posLook = new Vector3(0, 0, 0);
@@ -287,66 +318,79 @@ function watchDice(alpha) {
 function animate() {
     dt = clock.getDelta();
 
+
     renderer.clear();
     renderer.render(scene, camera);
 
-    if (lives !== 0) {
-        //AUTOMA A STATI FINITI
-        switch (curState) {
-            case "WAITING":
-                break;
-            case "REVEAL":
-                revealGuessed();
-                break;
-            case "TRTDICE": //TRT significa "Transition to"
-                posLook = diceLook;
-                if (timeA >= 0) {
-                    watchDice(timeA);
-                    timeA -= 0.003;
-                } else curState = "ROLLING";
-                break;
-            case "ROLLING":
-                roll();
-                break;
-            case "QUESTION":
-                ask()
-            case "MOVING":
-                if (oldPos === positions) go()
-                break;
-            case "TRTCENTRE":
-                if (backTime <= 1) {
-                    backTime += 0.02;
-                    resetCamera(backTime);
-                    posLook = oriLook;
-                } else curState = "QUESTION";
-                break;
-            case "WIN":
-                if (dl.position.y > 3) {
-                    dl.position.y -= 0.005;
-                    dl2.position.y -= 0.005;
-                } else if (!did){
-                    document.getElementsByTagName("header").item(0).style.background = "radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(255,201,0,1) 100%)";
-                    document.getElementsByTagName("header").item(0).innerHTML= "<img src=\"img/win.png\" alt=\"title\">";
+    if (loaded) {
+        if (!added){
+            added=true;
+            dice.position.set(12, 4, 6);
 
-                    for (let i = 0; i < lives; i++) document.getElementById("heartContainter").innerHTML="";
-                    for (let i = 0; i < lives; i++) document.getElementById("heartContainter").innerHTML += "<img src=\"img/winHeart.png\" class=\"heart\">\n";
-
-                    document.getElementById("playerStats").style.background="rgb(255,243,124)";
-                    document.getElementById("playerStats").style.background="linear-gradient(145deg, rgba(255,243,124,1) 0%, rgba(255,192,0,1) 100%)";
-
-
-                    did=!did;
-                }
-                break;
+            dice.castShadow = true;
+            dice.receiveShadow = true;
+            scene.add(dice)
         }
-    } else {
-        document.getElementsByTagName("header").item(0).style.background = "radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(255,0,0,1) 100%)"
-        for (let i = 0; i < 5; i++) slice[c[i]].position.y -= 0.005;
-        if (dl.position.y < 50) {
-            dl.position.y += 0.05;
-            dl2.position.y += 0.05;
+        if (lives !== 0) {
+            //AUTOMA A STATI FINITI
+            switch (curState) {
+                case "WAITING":
+                    break;
+                case "REVEAL":
+                    revealGuessed();
+                    break;
+                case "TRTDICE": //TRT significa "Transition to"
+                    posLook = diceLook;
+                    if (timeA >= 0) {
+                        watchDice(timeA);
+                        timeA -= 0.003;
+                    } else curState = "ROLLING";
+                    break;
+                case "ROLLING":
+                    roll();
+                    break;
+                case "QUESTION":
+                    ask()
+                case "MOVING":
+                    if (oldPos === positions) go()
+                    break;
+                case "TRTCENTRE":
+                    if (backTime <= 1) {
+                        backTime += 0.02;
+                        resetCamera(backTime);
+                        posLook = oriLook;
+                    } else curState = "QUESTION";
+                    break;
+                case "WIN":
+                    if (dl.position.y > 3) {
+                        dl.position.y -= 0.005;
+                        dl2.position.y -= 0.005;
+                    } else if (!did) {
+                        document.getElementsByTagName("header").item(0).style.background = "radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(255,201,0,1) 100%)";
+                        document.getElementsByTagName("header").item(0).innerHTML = "<img src=\"img/win.png\" alt=\"title\">";
+
+                        for (let i = 0; i < lives; i++) document.getElementById("heartContainter").innerHTML = "";
+                        for (let i = 0; i < lives; i++) document.getElementById("heartContainter").innerHTML += "<img src=\"img/winHeart.png\" class=\"heart\">\n";
+
+                        document.getElementById("playerStats").style.background = "rgb(255,243,124)";
+                        document.getElementById("playerStats").style.background = "linear-gradient(145deg, rgba(255,243,124,1) 0%, rgba(255,192,0,1) 100%)";
+
+
+                        did = !did;
+                    }
+                    break;
+            }
         } else {
-            setTimeout(()=>{document.getElementById("retry").style.display="block";},1000)
+            document.getElementsByTagName("header").item(0).style.background = "radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(255,0,0,1) 100%)"
+            for (let i = 0; i < 5; i++) slice[c[i]].position.y -= 0.005;
+            if (dl.position.y < 50) {
+                dl.position.y += 0.05;
+                dl2.position.y += 0.05;
+            } else {
+                setTimeout(() => {
+                    document.getElementById("retry").style.display = "block";
+                }, 1000)
+            }
         }
     }
 }
@@ -370,7 +414,6 @@ function onWindowResize() {
     camera.aspect = window.innerWidth / window.innerHeight
     camera.updateProjectionMatrix()
     renderer.setSize(window.innerWidth, window.innerHeight)
-    render()
 }
 
 
