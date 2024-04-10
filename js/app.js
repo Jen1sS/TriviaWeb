@@ -32,7 +32,7 @@ let first = false;
 let or;
 const rotations = { // faccie dado
     1: [0, Math.PI*0.5, Math.PI * 1.5],
-    2: [Math.PI*0.5, Math.PI*0.5, Math.PI * 0.5], //no
+    2: [Math.PI*0.5, Math.PI, Math.PI * 1.5],
     3: [0, 0, 0],
     4: [Math.PI*0.5, Math.PI*0.5, Math.PI * 0.5],
     5: [Math.PI*0.5, 0, Math.PI * 1.5],
@@ -295,8 +295,7 @@ function roll() {
     if (!rolled) {
         if (!active) {
             id = setInterval(decrement, 1000);
-            //positions = randBetween(6, 1);
-            positions=2;
+            positions = randBetween(6, 1);
             active = !active;
             first = false;
         }

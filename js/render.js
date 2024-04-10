@@ -127,7 +127,8 @@ function initScene() {
         scene.add(caselle[i]);
     }
 
-    //CREAZIONE PEDINA PER GIOCARE
+    //CREAZIONE PEDINA PER GIOCARE - OLD
+    //TODO: MODELLO NUOVO NON LO VEDO NON SO PERCHÈ
     const g2 = new THREE.CylinderGeometry(0.125, 0.125, 0.25, 32);
     const m2 = new THREE.MeshPhysicalMaterial({color: 0xFFFFFF, metalness: 0.5});
     player = new THREE.Mesh(g2, m2);
@@ -135,6 +136,7 @@ function initScene() {
     player.castShadow = true;
     player.receiveShadow = true;
     travelTime = 1.0;
+
 
 
     //CREAZIONE TABELLONE
@@ -175,7 +177,7 @@ function initScene() {
     //CREAZIONE DADO - NEW
     loaderGLTF.load(
         // resource URL
-        '../models/untitled.glb',
+        '../models/dice.glb',
         // called when the resource is loaded
         (modello) => {
             dice = modello.scene;
@@ -235,7 +237,6 @@ function initScene() {
     scene.add(dl2);
     scene.add(plane);
     scene.add(table);
-    scene.add(player);
 
     //Inizializzazione visuale per lerp
     posLook = new Vector3(0, 0, 0);
@@ -325,11 +326,13 @@ function animate() {
     if (loaded) {
         if (!added){
             added=true;
-            dice.position.set(12, 4, 6);
+            dice.position.set(12, 5, 6);
 
             dice.castShadow = true;
             dice.receiveShadow = true;
             scene.add(dice)
+            scene.add(player);
+
         }
         if (lives !== 0) {
             //AUTOMA A STATI FINITI
