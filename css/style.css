@@ -147,7 +147,9 @@ button.game{
     border-radius: 1rem;
 }
 
-button#play{}
+button#play{
+    display: none;
+}
 
 button#retry{
     padding-top: 2vh;

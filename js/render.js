@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import {MeshPhysicalMaterial, Vector3} from 'three';
-import {Importers} from './Importers.js';
+import {ModelImporter} from './ModelImporter.js';
 
 //Necessari per ThreeJs
 let gl = null;       // Il canvas in cui renderizzare
@@ -47,9 +47,12 @@ const loader = new THREE.TextureLoader();
 //ANIMATION
 let mixer = THREE.AnimationMixer;
 //MODELS
-let mi = new Importers();
+let mi = new ModelImporter();
 //ADD
 let added = false;
+
+let playerPath="../models/avatar.glb";
+let dicePath="../models/dice.glb";
 
 /*
  * Inizializza il motore e il gioco
@@ -124,7 +127,7 @@ function initScene() {
     }
 
     //TODO: MODELLO NUOVO NON LO VEDO NON SO PERCHÈ
-    mi.import("../models/james.glb")
+    mi.import(playerPath)
 
 
     //CREAZIONE TABELLONE
@@ -147,7 +150,7 @@ function initScene() {
     plane.rotateX(Math.PI / 2)
 
     //CREAZIONE DADO - NEW
-    mi.import('../models/dice.glb');
+    mi.import(dicePath);
 
     //CREAZIONE SLICE (1 per categoria)
     const angle = 2 * Math.PI / 5;
@@ -190,6 +193,7 @@ function initScene() {
     posLook = new Vector3(0, 0, 0);
 
 
+    document.getElementById("play").style.display = "none"
     renderer.setAnimationLoop(animate);
 }
 
@@ -210,14 +214,14 @@ function go() {
             player.position.set(p[position][0], p[position][1] + 0.25, p[position][2]);
 
             travelTime = 2;
-            pos = (position + 1) % (p.length - 2);
+            if (position+1===p.length) pos=0;
+            else pos = position + 1;
             end = new Vector3(p[pos][0], p[pos][1] + 0.25, p[pos][2]);
             start()
             positions--;
             asked = false;
 
-            if (position === p.length - 2) position = 0;
-            else position++;
+            position = pos;
 
         } else if (curState !== "WAITING") {
             curState = "QUESTION"
@@ -270,14 +274,16 @@ function animate() {
     renderer.clear();
     renderer.render(scene, camera);
 
+
     if (mi.everythingLoaded()) {
         if (lives !== 0) {
             //AUTOMA A STATI FINITI
             switch (curState) {
                 case "WAITING":
+                    setTimeout(()=>{document.getElementById("play").style.display = "block"},500)
                     added = true;
 
-                    dice = mi.getModel('../models/dice.glb');
+                    dice = mi.getModel(dicePath);
                     dice.position.set(12, 5, 6);
                     dice.scale.x = 0.02;
                     dice.scale.y = 0.02;
@@ -285,7 +291,7 @@ function animate() {
 
 
 
-                    player = mi.getModel('../models/james.glb');
+                    player = mi.getModel(playerPath);
                     player.position.set(p[position][0], p[position][1] + 0.25, p[position][2]); //prendo posizione casella 0
 
                     scene.add(dice)

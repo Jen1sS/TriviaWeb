@@ -14,7 +14,7 @@ let curState = "WAITING";
 //PLAYER
 let totalLives;
 let lives = 4;
-let position = 33;
+let position = 0;
 let completed = {0xd900ff: false, 0x1e00ff: false, 0x00f2ff: false, 0x00ff3c: false, 0xfbff00: false}
 let oldPos = 0; //ultima posizione
 
@@ -295,7 +295,7 @@ function roll() {
         if (!active) {
             id = setInterval(decrement, 1000);
             //positions = randBetween(6, 1);
-            positions=2
+            positions=1
             active = !active;
             first = false;
         }
