@@ -1,7 +1,6 @@
 import * as THREE from 'three';
-import {GLTFLoader} from "gltf";
-import {AnimationMixer} from "three";
 import {MeshPhysicalMaterial, Vector3} from 'three';
+import {Importers} from './Importers.js';
 
 //Necessari per ThreeJs
 let gl = null;       // Il canvas in cui renderizzare
@@ -33,7 +32,7 @@ let posLook;
 const diceLook = new Vector3(12, 4, 6);
 const oriLook = new Vector3(0, 0, 0);
 
-let did=false //WIN
+let did = false //WIN
 
 // LERPING
 let travelTime;
@@ -44,16 +43,13 @@ let end;
 let reset;
 const loader = new THREE.TextureLoader();
 
-//DICE
-const loaderGLTF = new GLTFLoader();
+
+//ANIMATION
 let mixer = THREE.AnimationMixer;
-let loaded=false;
-let added=false;
-
-
-
-
-
+//MODELS
+let mi = new Importers();
+//ADD
+let added = false;
 
 /*
  * Inizializza il motore e il gioco
@@ -127,16 +123,8 @@ function initScene() {
         scene.add(caselle[i]);
     }
 
-    //CREAZIONE PEDINA PER GIOCARE - OLD
     //TODO: MODELLO NUOVO NON LO VEDO NON SO PERCHÈ
-    const g2 = new THREE.CylinderGeometry(0.125, 0.125, 0.25, 32);
-    const m2 = new THREE.MeshPhysicalMaterial({color: 0xFFFFFF, metalness: 0.5});
-    player = new THREE.Mesh(g2, m2);
-    player.position.set(p[position][0], p[position][1] + 0.25, p[position][2]) //prendo posizione casella 0
-    player.castShadow = true;
-    player.receiveShadow = true;
-    travelTime = 1.0;
-
+    mi.import("../models/james.glb")
 
 
     //CREAZIONE TABELLONE
@@ -158,48 +146,8 @@ function initScene() {
     plane.position.y = 1.2
     plane.rotateX(Math.PI / 2)
 
-
-
-
-    //CREAZIONE DADO - OLD
-    /*const g5 = new THREE.BoxGeometry(1, 1, 1)
-    const diceTexture = [
-        new THREE.MeshPhysicalMaterial({map: loadColorTexture('../img/dice/1.png')}),
-        new THREE.MeshPhysicalMaterial({map: loadColorTexture('../img/dice/2.png')}),
-        new THREE.MeshPhysicalMaterial({map: loadColorTexture('../img/dice/3.png')}),
-        new THREE.MeshPhysicalMaterial({map: loadColorTexture('../img/dice/4.png')}),
-        new THREE.MeshPhysicalMaterial({map: loadColorTexture('../img/dice/5.png')}),
-        new THREE.MeshPhysicalMaterial({map: loadColorTexture('../img/dice/6.png')}),
-    ];
-        dice = new THREE.Mesh(g5, diceTexture);
-     */
-
     //CREAZIONE DADO - NEW
-    loaderGLTF.load(
-        // resource URL
-        '../models/dice.glb',
-        // called when the resource is loaded
-        (modello) => {
-            dice = modello.scene;
-            dice.rotation.y += Math.PI;
-            dice.scale.x=0.03;
-            dice.scale.z=0.03;
-            dice.scale.y=0.03;
-
-            mixer = new AnimationMixer(dice)
-            loaded=true;
-        },
-        // called while loading is progressing
-        (xhr) => {
-            if (xhr.loaded === xhr.total) {
-                console.log("loaded dice.glb")
-            } else if (xhr.loaded < xhr.total) console.log("loading dice.glb")
-        },
-        // called when loading has errors
-        (error) => {
-            console.log(error);
-        }
-    );
+    mi.import('../models/dice.glb');
 
     //CREAZIONE SLICE (1 per categoria)
     const angle = 2 * Math.PI / 5;
@@ -315,7 +263,6 @@ function watchDice(alpha) {
     camera.position.lerp(new Vector3(12, 8, 6), 1 - alpha)
 }
 
-
 function animate() {
     dt = clock.getDelta();
 
@@ -323,21 +270,26 @@ function animate() {
     renderer.clear();
     renderer.render(scene, camera);
 
-    if (loaded) {
-        if (!added){
-            added=true;
-            dice.position.set(12, 5, 6);
-
-            dice.castShadow = true;
-            dice.receiveShadow = true;
-            scene.add(dice)
-            scene.add(player);
-
-        }
+    if (mi.everythingLoaded()) {
         if (lives !== 0) {
             //AUTOMA A STATI FINITI
             switch (curState) {
                 case "WAITING":
+                    added = true;
+
+                    dice = mi.getModel('../models/dice.glb');
+                    dice.position.set(12, 5, 6);
+                    dice.scale.x = 0.02;
+                    dice.scale.y = 0.02;
+                    dice.scale.z = 0.02;
+
+
+
+                    player = mi.getModel('../models/james.glb');
+                    player.position.set(p[position][0], p[position][1] + 0.25, p[position][2]); //prendo posizione casella 0
+
+                    scene.add(dice)
+                    scene.add(player);
                     break;
                 case "REVEAL":
                     revealGuessed();
@@ -413,6 +365,7 @@ function revealGuessed() {
 }
 
 window.addEventListener('resize', onWindowResize, false)
+
 function onWindowResize() {
     camera.aspect = window.innerWidth / window.innerHeight
     camera.updateProjectionMatrix()

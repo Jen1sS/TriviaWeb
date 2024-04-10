@@ -14,7 +14,7 @@ let curState = "WAITING";
 //PLAYER
 let totalLives;
 let lives = 4;
-let position = 0;
+let position = 33;
 let completed = {0xd900ff: false, 0x1e00ff: false, 0x00f2ff: false, 0x00ff3c: false, 0xfbff00: false}
 let oldPos = 0; //ultima posizione
 
@@ -86,7 +86,6 @@ class Question {
         return this.rightAnswers;
     }
 }
-
 
 //Da la domanda per il colore e chiede anche il numero di domande da recuperare nella fetch
 async function getQuestions(color, number) {
@@ -295,7 +294,8 @@ function roll() {
     if (!rolled) {
         if (!active) {
             id = setInterval(decrement, 1000);
-            positions = randBetween(6, 1);
+            //positions = randBetween(6, 1);
+            positions=2
             active = !active;
             first = false;
         }
