@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import {MeshPhysicalMaterial, Vector3} from 'three';
-import {ModelImporter} from './ModelImporter.js';
+import {AnimationManager, ModelImporter} from './ModelImporter.js';
 
 //Necessari per ThreeJs
 let gl = null;       // Il canvas in cui renderizzare
@@ -25,6 +25,7 @@ let dl2 = null;
 
 //PLAYER
 let player;
+let aniP=null;
 
 //Visuali della camera necessarie per lerping
 let endLook;
@@ -33,6 +34,7 @@ const diceLook = new Vector3(12, 4, 6);
 const oriLook = new Vector3(0, 0, 0);
 
 let did = false //WIN
+let loaded=false;
 
 // LERPING
 let travelTime;
@@ -274,13 +276,15 @@ function animate() {
     renderer.clear();
     renderer.render(scene, camera);
 
+    if (aniP!==null) aniP.update(dt);
+
 
     if (mi.everythingLoaded()) {
         if (lives !== 0) {
             //AUTOMA A STATI FINITI
             switch (curState) {
                 case "WAITING":
-                    setTimeout(()=>{document.getElementById("play").style.display = "block"},500)
+                    document.getElementById("play").style.display = "block"
                     added = true;
 
                     dice = mi.getModel(dicePath);
@@ -289,10 +293,20 @@ function animate() {
                     dice.scale.y = 0.02;
                     dice.scale.z = 0.02;
 
-
-
                     player = mi.getModel(playerPath);
-                    player.position.set(p[position][0], p[position][1] + 0.25, p[position][2]); //prendo posizione casella 0
+                    player.position.set(p[position][0], p[position][1] , p[position][2]); //prendo posizione casella 0
+
+
+                    if (!loaded){
+                        loaded=true;
+
+                        player.rotation.y+=Math.PI/2;
+
+                        aniP = new AnimationManager(player);
+                        aniP.import("../animations/idle.glb","idle");
+                    } else if (aniP.everythingLoaded() && !aniP.isPlaying()){
+                        aniP.playAnimation("idle");
+                    }
 
                     scene.add(dice)
                     scene.add(player);
