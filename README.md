@@ -1,9 +1,6 @@
 <h1> TODO: </h1>
 <hr>
 <br>
-- Mettere modello come pedina
+- TANTE TANTE TANTE TANTE TANTE TANTETANTE TANTE TANTE TANTE TANTE TANTE cose da fixare (guarda per capire)
 <br>
-- Decorare
-<br>
-- Dado con cannon-es
 
