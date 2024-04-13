@@ -13,7 +13,7 @@ let curState = "WAITING";
 
 //PLAYER
 let totalLives;
-let lives = 4;
+let lives = 5;
 let position = 0;
 let completed = {0xd900ff: false, 0x1e00ff: false, 0x00f2ff: false, 0x00ff3c: false, 0xfbff00: false}
 let oldPos = 0; //ultima posizione
@@ -51,6 +51,8 @@ let color = null; //colore della casella indovinata
 
 //DELTA TIME
 let dt;
+
+
 
 class Question {
 
@@ -204,7 +206,6 @@ function verify(num) {
             clearTimeout(decrementTimer);
             color = c[position];
             setTimeout(hideT, 750)
-
         } else {
             document.getElementsByTagName("header").item(0).style.background = "radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(255,0,0,1) 100%)"
             document.getElementById("points").style.color = "red";
@@ -261,14 +262,6 @@ function hide(guessed) {
     document.getElementById("question").style.display = "none";
     document.getElementById("points").innerHTML = "Points: " + points;
     document.getElementById("points").style.color = "black";
-    document.getElementById("heartContainter").innerHTML = "";
-    for (let i = 0; i < lives; i++) {
-        document.getElementById("heartContainter").innerHTML += "<img src=\"img/heart.png\" class=\"heart\">\n"
-    }
-    for (let i = 0; i < totalLives - lives; i++) {
-        document.getElementById("heartContainter").innerHTML += "<img src=\"img/heartMissing.png\" class=\"heart\">\n"
-    }
-
 
     if (guessed) curState = "REVEAL"
     else curState = "TRTDICE";

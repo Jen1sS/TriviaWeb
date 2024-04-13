@@ -12,6 +12,10 @@ export class ModelImporter {
     }
 
     async import(path) {
+        this.importWithName(path,path)
+    }
+
+    async importWithName(path,name) {
         this.elToAdd++;
         await loaderGLTF.load(
             // resource URL
@@ -19,14 +23,14 @@ export class ModelImporter {
             // called when the resource is loaded
             (modello) => {
                 this.elToAdd--;
-                this.elementsLoaded[path] = modello.scene;
+                this.elementsLoaded[name] = modello.scene;
             },
             // called while loading is progressing
             (xhr) => {
                 if (xhr.loaded === xhr.total) {
-                    console.log("ModelImporter - loaded " + path);
+                    console.log("ModelImporter - loaded " + name);
                 } else {
-                    console.log("ModelImporter - loading " + path);
+                    //console.log("ModelImporter - loading " + path);
                 }
             },
             // called when loading has errors
@@ -40,8 +44,8 @@ export class ModelImporter {
         return this.elToAdd === 0;
     }
 
-    getModel(path) {
-        return this.elementsLoaded[path];
+    getModel(pathOrName) {
+        return this.elementsLoaded[pathOrName];
     }
 }
 
@@ -70,7 +74,7 @@ export class AnimationManager {
                 if (xhr.loaded === xhr.total) {
                     console.log("AnimationImporter - loaded " + path);
                 } else {
-                    console.log("AnimationImporter - loading " + path);
+                    //console.log("AnimationImporter - loading " + path);
                 }
             },
             // called when loading has errors
@@ -95,18 +99,24 @@ export class AnimationManager {
     }
 
 
-    //TODO: NON VA LA TRANSITION
-    transitionTo(name,time) {
-        if (this.mixer.clipAction(this.animations[name])!==this.activeAction){
-            let old=this.activeAction;
-            this.activeAction=this.mixer.clipAction(this.animations[name]);
-
-            old.crossFadeTo(this.activeAction,time,false);
+    //TODO: FA MA MALE CHIEDI AL SAMMA
+    lastCalled;
+    transitionTo(name, time) {
+        if (this.lastCalled!==name) {
+            const nextAction = this.mixer.clipAction(this.animations[name]);
+            this.activeAction.crossFadeTo(nextAction, time, false);
+            setTimeout(() => {
+                this.stopAll();
+                this.playAnimation(name)
+            }, time);
+            this.playing = true;
         }
-        this.playAnimation(name)
+
+        this.lastCalled=name;
+
     }
 
-    stopAll(){
+    stopAll() {
         this.mixer.stopAllAction();
     }
 

@@ -25,7 +25,7 @@ let dl2 = null;
 
 //PLAYER
 let player;
-let aniP=null;
+let aniP;
 
 //Visuali della camera necessarie per lerping
 let endLook;
@@ -42,12 +42,14 @@ let backTime = 0;
 let pos;
 let end;
 
+//hearts
+let hearts=[];
+let heartLight=[];
+
 let reset;
 const loader = new THREE.TextureLoader();
 
 
-//ANIMATION
-let mixer = THREE.AnimationMixer;
 //MODELS
 let mi = new ModelImporter();
 //ADD
@@ -55,6 +57,8 @@ let added = false;
 
 let playerPath="../models/avatar.glb";
 let dicePath="../models/dice.glb";
+
+let won;
 
 /*
  * Inizializza il motore e il gioco
@@ -174,6 +178,11 @@ function initScene() {
         scene.add(slice[c[i]])
     }
 
+
+    //CREAZIONE CUORI
+    for (let i = 0; i < lives; i++) {
+        mi.importWithName("../models/heart.glb","heart"+i);
+    }
     //CREAZIONE LUCE DEL TABELLONE
     dl = new THREE.PointLight(0xFFFFFF, 35);
     dl.position.set(0, 5, 0);
@@ -213,7 +222,7 @@ function go() {
     else {
         reset = false;
         if (positions !== 0) {
-            player.position.set(p[position][0], p[position][1] + 0.25, p[position][2]);
+            player.position.set(p[position][0], p[position][1] , p[position][2]);
 
             travelTime = 2;
             if (position+1===p.length) pos=0;
@@ -246,7 +255,7 @@ function start() {
         }
 
         player.position.lerp(end, 1 - travelTime);
-        travelTime -= 0.01;
+        travelTime -= 0.003;
         posLook = player.position;
         camera.lookAt(posLook)
     } else {
@@ -260,6 +269,7 @@ function start() {
     else{
         setTimeout(go, 100);
         animationStart=false;
+        console.log("Start")
         aniP.transitionTo("idle", 0.2);
     }
 }
@@ -288,7 +298,9 @@ function animate() {
     renderer.clear();
     renderer.render(scene, camera);
 
-    if (aniP!==null) aniP.update(dt);
+    if (aniP!==undefined) aniP.update(dt);
+
+    updateDirection();
 
 
     if (mi.everythingLoaded()) {
@@ -317,22 +329,55 @@ function animate() {
                         aniP = new AnimationManager(player);
                         aniP.import("../animations/idle.glb","idle");
                         aniP.import("../animations/walk.glb","walk");
+                        aniP.import("../animations/win.glb","win");
+                        aniP.import("../animations/lost.glb","lost");
                     } else if (aniP.everythingLoaded() && !aniP.isPlaying()){
                         aniP.playAnimation("idle");
                     }
 
+                    for (let i = 0; i < lives; i++) {
+                        hearts.push(mi.getModel("heart"+i));
+                        hearts[i].position.set(p[8+i][0]+1.25, 1.145 , p[8+i][2]-i*0.7);
+                        hearts[i].rotation.set(Math.PI/2,0,Math.PI/2);
+                        hearts[i].scale.x=0.15;
+                        hearts[i].scale.y=0.15;
+                        hearts[i].scale.z=0.15;
+                        hearts[i].receiveShadow=true;
+                        hearts[i].castShadow=true;
+
+                        heartLight.push(new THREE.PointLight(0xFF0000,3));
+                        heartLight[i].position.set(p[8+i][0]+1.25, 2 , p[8+i][2]-i*0.7);
+
+                        scene.add(hearts[i]);
+                        scene.add(heartLight[i]);
+                    }
                     scene.add(dice)
                     scene.add(player);
                     break;
                 case "REVEAL":
+
+                    aniP.transitionTo("win",0.2);
+                    won=true;
+
                     revealGuessed();
                     break;
                 case "TRTDICE": //TRT significa "Transition to"
-                    posLook = diceLook;
-                    if (timeA >= 0) {
-                        watchDice(timeA);
-                        timeA -= 0.003;
-                    } else curState = "ROLLING";
+
+                    if (!won){
+                        aniP.transitionTo("lost",0.2);
+                        if (hearts[lives-1].position.y>=0.5) {
+                            hearts[lives].position.y -= 0.5 * dt;
+                            heartLight[lives].position.y -= 0.8 * dt;
+                        }
+                    }
+
+                    setTimeout(()=>{
+                        posLook = diceLook;
+                        if (timeA >= 0) {
+                            watchDice(timeA);
+                            timeA -= 0.003;
+                        } else curState = "ROLLING";
+                    },2000)
                     break;
                 case "ROLLING":
                     roll();
@@ -379,6 +424,25 @@ function animate() {
                     document.getElementById("retry").style.display = "block";
                 }, 1000)
             }
+        }
+    }
+}
+
+function updateDirection(){
+    if (loaded) {
+        switch (Math.floor(position / 9)) {
+            case 0:
+                player.rotation.y = Math.PI/2;
+                break;
+            case 1:
+                player.rotation.y = Math.PI;
+                break;
+            case 2:
+                player.rotation.y = Math.PI*1.5;
+                break;
+            case 3:
+                player.rotation.y = Math.PI*2;
+                break;
         }
     }
 }
