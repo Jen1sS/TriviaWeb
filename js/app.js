@@ -181,8 +181,6 @@ function loadQuestion() {
 function verify(num) {
     if (!end) {
         if (quest[quest.length - 1].getRightAnswer() === num) {
-            document.getElementsByTagName("header").item(0).style.background = "radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(0,255,0,1) 100%)"
-            document.getElementById("points").style.color = "green";
 
             completed[c[position]] = true;
 
@@ -201,15 +199,11 @@ function verify(num) {
                     break;
 
             }
-            document.getElementById("points").innerHTML += " + " + point;
             points += point;
             clearTimeout(decrementTimer);
             color = c[position];
             setTimeout(hideT, 750)
         } else {
-            document.getElementsByTagName("header").item(0).style.background = "radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(255,0,0,1) 100%)"
-            document.getElementById("points").style.color = "red";
-
             lives--;
             clearTimeout(decrementTimer);
             setTimeout(hideF, 750)
@@ -258,10 +252,7 @@ function hideT() {
 }
 
 function hide(guessed) {
-    document.getElementsByTagName("header").item(0).style.background = "radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(0,117,255,1) 100%)"
     document.getElementById("question").style.display = "none";
-    document.getElementById("points").innerHTML = "Points: " + points;
-    document.getElementById("points").style.color = "black";
 
     if (guessed) curState = "REVEAL"
     else curState = "TRTDICE";
@@ -288,7 +279,8 @@ function roll() {
     if (!rolled) {
         if (!active) {
             id = setInterval(decrement, 1000);
-            positions = randBetween(6, 1);
+            positions = 1;
+            //positions = randBetween(6, 1);
             active = !active;
             first = false;
         }
@@ -319,7 +311,6 @@ function roll() {
         //TODO: CAMERA TORNA A POS ORIGINALE
         oldPos = positions;
         curState = "MOVING";
-        document.getElementById("rolled").innerHTML = "Rolled: " + positions;
         timeA = 1;
     }
 

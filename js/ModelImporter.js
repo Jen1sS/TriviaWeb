@@ -1,6 +1,5 @@
 import {GLTFLoader} from "gltf";
 import {AnimationMixer} from "three";
-import * as THREE from "three";
 
 const loaderGLTF = new GLTFLoader();
 
@@ -46,6 +45,10 @@ export class ModelImporter {
 
     getModel(pathOrName) {
         return this.elementsLoaded[pathOrName];
+    }
+
+    clear(){
+        this.elementsLoaded={};
     }
 }
 
@@ -122,5 +125,20 @@ export class AnimationManager {
 
     update(dt) {
         this.mixer.update(dt);
+    }
+
+    doOnce(name,time){
+        const nextAction = this.mixer.clipAction(this.animations[name]);
+        nextAction.clampWhenFinished=true;
+        nextAction.repetitions=1;
+
+        this.activeAction.crossFadeTo(nextAction, time, false);
+        setTimeout(() => {
+            this.stopAll();
+            this.playAnimation(name)
+        }, time);
+        this.playing = true;
+        this.lastCalled=name;
+
     }
 }

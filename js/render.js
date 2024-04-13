@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import {MeshPhysicalMaterial, Vector3} from 'three';
 import {AnimationManager, ModelImporter} from './ModelImporter.js';
+import {Writer} from './Writer.js';
 
 //Necessari per ThreeJs
 let gl = null;       // Il canvas in cui renderizzare
@@ -34,7 +35,7 @@ const diceLook = new Vector3(12, 4, 6);
 const oriLook = new Vector3(0, 0, 0);
 
 let did = false //WIN
-let loaded=false;
+let loaded = false;
 
 // LERPING
 let travelTime;
@@ -43,8 +44,8 @@ let pos;
 let end;
 
 //hearts
-let hearts=[];
-let heartLight=[];
+let hearts = [];
+let heartLight = [];
 
 let reset;
 const loader = new THREE.TextureLoader();
@@ -55,20 +56,29 @@ let mi = new ModelImporter();
 //ADD
 let added = false;
 
-let playerPath="../models/avatar.glb";
-let dicePath="../models/dice.glb";
+let playerPath = "../models/avatar.glb";
+let dicePath = "../models/dice.glb";
 
 let won;
+let finalAnimation;
+
+//TEXT
+let writer;
+let num;
+let numLight=[];
+
+//POINTS
+let lastPoints=0;
 
 /*
  * Inizializza il motore e il gioco
  */
-function initScene() {
+async function initScene() {
     if (renderer != null) return;
 
 
     let width = window.innerWidth;
-    let height = window.innerHeight * 0.9;
+    let height = window.innerHeight;
 
     //CREAZIONE RENDERER
     renderer = new THREE.WebGLRenderer({antialias: "true", powerPreference: "high-performance"});
@@ -80,13 +90,13 @@ function initScene() {
 
     //SETUP CAMERA
     camera = new THREE.PerspectiveCamera(70, width / height, 0.1, 500);
-    camera.position.set(3.5, 7.5, 3.5);
+    camera.position.set(3.5, 9.5, 3.5);
     camera.lookAt(0, 0, 0);
     clock = new THREE.Clock();
 
     //CREAZIONE SCENE
     scene = new THREE.Scene();
-    scene.background = new THREE.Color(0xb5b6b6);
+    scene.background = new THREE.Color(0x000000);
 
     //CREAZIONE CASELLE (ogni elemento in c corrisponde ad un colore)
     c = [0xd900ff, 0x1e00ff, 0x00f2ff, 0x00ff3c, 0xfbff00, 0xd900ff, 0x1e00ff, 0x00f2ff, 0x00ff3c, 0xfbff00, 0xd900ff, 0x1e00ff, 0x00f2ff, 0x00ff3c, 0xfbff00, 0xd900ff, 0x1e00ff, 0x00f2ff, 0x00ff3c, 0xfbff00, 0xd900ff, 0x1e00ff, 0x00f2ff, 0x00ff3c, 0xfbff00, 0xd900ff, 0x1e00ff, 0x00f2ff, 0x00ff3c, 0xfbff00, 0xd900ff, 0x1e00ff, 0x00f2ff, 0x00ff3c]
@@ -132,7 +142,6 @@ function initScene() {
         scene.add(caselle[i]);
     }
 
-    //TODO: MODELLO NUOVO NON LO VEDO NON SO PERCHÈ
     mi.import(playerPath)
 
 
@@ -181,17 +190,21 @@ function initScene() {
 
     //CREAZIONE CUORI
     for (let i = 0; i < lives; i++) {
-        mi.importWithName("../models/heart.glb","heart"+i);
+        mi.importWithName("../models/heart.glb", "heart" + i);
     }
     //CREAZIONE LUCE DEL TABELLONE
-    dl = new THREE.PointLight(0xFFFFFF, 35);
+    dl = new THREE.PointLight(0xFFFFFF, 20);
     dl.position.set(0, 5, 0);
     dl.castShadow = true;
 
     //CREAZIONE LUCE DEL DADO
-    dl2 = new THREE.PointLight(0xFFFFFF, 35);
+    dl2 = new THREE.PointLight(0xFFFFFF, 20);
     dl2.position.set(12, 8, 6);
     dl2.castShadow = true;
+
+    //NUMERI
+    writer = new Writer(new Vector3(p[0][0] + 0.7, 1.2, p[0][2] + 1.1), scene);
+    writer.write("000");
 
 
     //AGGIUNTA ALLA SCENA (altri messi perche sono in un array)
@@ -203,9 +216,10 @@ function initScene() {
     //Inizializzazione visuale per lerp
     posLook = new Vector3(0, 0, 0);
 
-
     document.getElementById("play").style.display = "none"
     renderer.setAnimationLoop(animate);
+
+
 }
 
 //LOADER
@@ -222,10 +236,10 @@ function go() {
     else {
         reset = false;
         if (positions !== 0) {
-            player.position.set(p[position][0], p[position][1] , p[position][2]);
+            player.position.set(p[position][0], p[position][1], p[position][2]);
 
             travelTime = 2;
-            if (position+1===p.length) pos=0;
+            if (position + 1 === p.length) pos = 0;
             else pos = position + 1;
             end = new Vector3(p[pos][0], p[pos][1] + 0.25, p[pos][2]);
             start()
@@ -242,7 +256,7 @@ function go() {
 
 
 //LERPING MOVIMENTO
-let animationStart=false;
+let animationStart = false;
 
 function start() {
     backTime = 0;
@@ -251,11 +265,11 @@ function start() {
 
         if (!animationStart) {
             aniP.transitionTo("walk", 0.2);
-            animationStart=true;
+            animationStart = true;
         }
 
         player.position.lerp(end, 1 - travelTime);
-        travelTime -= 0.003;
+        travelTime -= 0.01;
         posLook = player.position;
         camera.lookAt(posLook)
     } else {
@@ -266,10 +280,9 @@ function start() {
     }
 
     if (travelTime >= 0.01) setTimeout(start, 5);
-    else{
+    else {
         setTimeout(go, 100);
-        animationStart=false;
-        console.log("Start")
+        animationStart = false;
         aniP.transitionTo("idle", 0.2);
     }
 }
@@ -298,9 +311,30 @@ function animate() {
     renderer.clear();
     renderer.render(scene, camera);
 
-    if (aniP!==undefined) aniP.update(dt);
+    if (aniP !== undefined) aniP.update(dt);
 
     updateDirection();
+
+    if (points !== lastPoints) {
+        for (let i = 0; i < num.length; i++){
+            scene.remove(num[i]);
+            scene.remove(numLight[i]);
+        }
+        writer.write(points + "");
+    }
+    if (writer.ready()) {
+        lastPoints = points;
+
+        num = writer.get(1.2);
+        for (let i = 0; i < num.length; i++){
+            numLight.push(new THREE.PointLight(0x0000FF,3));
+            numLight[i].position.set(num[i].position.x,num[i].position.y+0.2,num[i].position.z);
+            numLight[i].castShadow=true;
+            numLight[i].receiveShadow=true;
+            scene.add(num[i]);
+            scene.add(numLight[i]);
+        }
+    }
 
 
     if (mi.everythingLoaded()) {
@@ -318,66 +352,72 @@ function animate() {
                     dice.scale.z = 0.02;
 
                     player = mi.getModel(playerPath);
-                    player.position.set(p[position][0], p[position][1] , p[position][2]); //prendo posizione casella 0
+                    player.position.set(p[position][0], p[position][1], p[position][2]); //prendo posizione casella 0
 
 
-                    if (!loaded){
-                        loaded=true;
+                    if (!loaded) {
+                        loaded = true;
 
-                        player.rotation.y+=Math.PI/2;
+                        player.rotation.y += Math.PI / 2;
 
                         aniP = new AnimationManager(player);
-                        aniP.import("../animations/idle.glb","idle");
-                        aniP.import("../animations/walk.glb","walk");
-                        aniP.import("../animations/win.glb","win");
-                        aniP.import("../animations/lost.glb","lost");
-                    } else if (aniP.everythingLoaded() && !aniP.isPlaying()){
+                        aniP.import("../animations/idle.glb", "idle");
+                        aniP.import("../animations/walk.glb", "walk");
+                        aniP.import("../animations/win.glb", "win");
+                        aniP.import("../animations/lost.glb", "lost");
+                        aniP.import("../animations/death.glb", "death");
+                        aniP.import("../animations/victory.glb", "victory");
+                    } else if (aniP.everythingLoaded() && !aniP.isPlaying()) {
                         aniP.playAnimation("idle");
                     }
 
                     for (let i = 0; i < lives; i++) {
-                        hearts.push(mi.getModel("heart"+i));
-                        hearts[i].position.set(p[8+i][0]+1.25, 1.145 , p[8+i][2]-i*0.7);
-                        hearts[i].rotation.set(Math.PI/2,0,Math.PI/2);
-                        hearts[i].scale.x=0.15;
-                        hearts[i].scale.y=0.15;
-                        hearts[i].scale.z=0.15;
-                        hearts[i].receiveShadow=true;
-                        hearts[i].castShadow=true;
+                        hearts.push(mi.getModel("heart" + i));
+                        hearts[i].position.set(p[8 + i][0] + 1.25, 1.145, p[8 + i][2] - i * 0.7);
+                        hearts[i].rotation.set(Math.PI / 2, 0, Math.PI / 2);
+                        hearts[i].scale.x = 0.15;
+                        hearts[i].scale.y = 0.15;
+                        hearts[i].scale.z = 0.15;
+                        hearts[i].receiveShadow = true;
+                        hearts[i].castShadow = true;
 
-                        heartLight.push(new THREE.PointLight(0xFF0000,3));
-                        heartLight[i].position.set(p[8+i][0]+1.25, 2 , p[8+i][2]-i*0.7);
+                        heartLight.push(new THREE.PointLight(0xFF0000, 3));
+                        heartLight[i].position.set(p[8 + i][0] + 1.25, 2, p[8 + i][2] - i * 0.7);
+                        heartLight[i].castShadow=true;
+                        heartLight[i].receiveShadow=true;
 
                         scene.add(hearts[i]);
                         scene.add(heartLight[i]);
                     }
+
+
                     scene.add(dice)
                     scene.add(player);
                     break;
                 case "REVEAL":
 
-                    aniP.transitionTo("win",0.2);
-                    won=true;
+                    aniP.transitionTo("win", 0.2);
+                    won = true;
 
                     revealGuessed();
                     break;
                 case "TRTDICE": //TRT significa "Transition to"
 
-                    if (!won){
-                        aniP.transitionTo("lost",0.2);
-                        if (hearts[lives-1].position.y>=0.5) {
+                    if (!won) {
+                        aniP.transitionTo("lost", 0.2);
+                        if (hearts[lives - 1].position.y >= 0.5) {
                             hearts[lives].position.y -= 0.5 * dt;
                             heartLight[lives].position.y -= 0.8 * dt;
                         }
                     }
 
-                    setTimeout(()=>{
+                    setTimeout(() => {
                         posLook = diceLook;
                         if (timeA >= 0) {
                             watchDice(timeA);
                             timeA -= 0.003;
                         } else curState = "ROLLING";
-                    },2000)
+                    }, 2000)
                     break;
                 case "ROLLING":
                     roll();
@@ -398,50 +438,55 @@ function animate() {
                     if (dl.position.y > 3) {
                         dl.position.y -= 0.005;
                         dl2.position.y -= 0.005;
-                    } else if (!did) {
-                        document.getElementsByTagName("header").item(0).style.background = "radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(255,201,0,1) 100%)";
-                        document.getElementsByTagName("header").item(0).innerHTML = "<img src=\"img/win.png\" alt=\"title\">";
-
-                        for (let i = 0; i < lives; i++) document.getElementById("heartContainter").innerHTML = "";
-                        for (let i = 0; i < lives; i++) document.getElementById("heartContainter").innerHTML += "<img src=\"img/winHeart.png\" class=\"heart\">\n";
-
-                        document.getElementById("playerStats").style.background = "rgb(255,243,124)";
-                        document.getElementById("playerStats").style.background = "linear-gradient(145deg, rgba(255,243,124,1) 0%, rgba(255,192,0,1) 100%)";
-
-
-                        did = !did;
                     }
+                    if (!finalAnimation){
+                        finalAnimation=true;
+                        setTimeout(()=>{
+                            aniP.transitionTo("victory",0.2)
+                        },1000)
+                    }
+
                     break;
             }
         } else {
-            document.getElementsByTagName("header").item(0).style.background = "radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(255,0,0,1) 100%)"
+            if (!finalAnimation){
+                finalAnimation=true;
+                setTimeout(()=>{
+                    aniP.doOnce("death",0.2)
+                },1000)
+            }
+
+            if (hearts[0].position.y >= 0.5) {
+                hearts[0].position.y -= 0.5 * dt;
+                heartLight[0].position.y -= 0.8 * dt;
+            }
             for (let i = 0; i < 5; i++) slice[c[i]].position.y -= 0.005;
             if (dl.position.y < 50) {
                 dl.position.y += 0.05;
                 dl2.position.y += 0.05;
             } else {
                 setTimeout(() => {
-                    document.getElementById("retry").style.display = "block";
-                }, 1000)
+                    location.reload()
+                }, 3000)
             }
         }
     }
 }
 
-function updateDirection(){
+function updateDirection() {
     if (loaded) {
         switch (Math.floor(position / 9)) {
             case 0:
-                player.rotation.y = Math.PI/2;
+                player.rotation.y = Math.PI / 2;
                 break;
             case 1:
                 player.rotation.y = Math.PI;
                 break;
             case 2:
-                player.rotation.y = Math.PI*1.5;
+                player.rotation.y = Math.PI * 1.5;
                 break;
             case 3:
-                player.rotation.y = Math.PI*2;
+                player.rotation.y = Math.PI * 2;
                 break;
         }
     }
