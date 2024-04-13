@@ -269,6 +269,7 @@ function hide(guessed) {
         document.getElementById("heartContainter").innerHTML += "<img src=\"img/heartMissing.png\" class=\"heart\">\n"
     }
 
+
     if (guessed) curState = "REVEAL"
     else curState = "TRTDICE";
 }

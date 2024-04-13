@@ -233,12 +233,20 @@ function go() {
 
 
 //LERPING MOVIMENTO
+let animationStart=false;
+
 function start() {
     backTime = 0;
     reset = true
     if (travelTime <= 1) {
+
+        if (!animationStart) {
+            aniP.transitionTo("walk", 0.2);
+            animationStart=true;
+        }
+
         player.position.lerp(end, 1 - travelTime);
-        travelTime -= 0.1;
+        travelTime -= 0.01;
         posLook = player.position;
         camera.lookAt(posLook)
     } else {
@@ -248,8 +256,12 @@ function start() {
         travelTime -= 0.005;
     }
 
-    if (travelTime >= 0) setTimeout(start, 5);
-    else setTimeout(go, 500);
+    if (travelTime >= 0.01) setTimeout(start, 5);
+    else{
+        setTimeout(go, 100);
+        animationStart=false;
+        aniP.transitionTo("idle", 0.2);
+    }
 }
 
 
@@ -304,6 +316,7 @@ function animate() {
 
                         aniP = new AnimationManager(player);
                         aniP.import("../animations/idle.glb","idle");
+                        aniP.import("../animations/walk.glb","walk");
                     } else if (aniP.everythingLoaded() && !aniP.isPlaying()){
                         aniP.playAnimation("idle");
                     }
