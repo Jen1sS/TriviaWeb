@@ -21,26 +21,15 @@ let oldPos = 0; //ultima posizione
 //ROLL
 let positions = 0; //roll uscito
 let time = randBetween(5, 1);
-let cumt;
 let rolled = false;
 let active = false
 let id;
 
 //RADDRIZZAMENTO DADO
 let done = false;
-let first = false;
-let or;
-const rotations = { // faccie dado
-    1: [0, Math.PI*0.5, Math.PI * 1.5],
-    2: [Math.PI*0.5, Math.PI, Math.PI * 1.5],
-    3: [0, 0, 0],
-    4: [Math.PI*0.5, Math.PI*0.5, Math.PI * 0.5],
-    5: [Math.PI*0.5, 0, Math.PI * 1.5],
-    6: [0, 0, Math.PI * 0.5],
-}
 
 //DICE
-let dice;
+let dice
 
 //LERPING
 let timeA = 1;
@@ -279,34 +268,20 @@ function roll() {
     if (!rolled) {
         if (!active) {
             id = setInterval(decrement, 1000);
-            positions = 1;
-            //positions = randBetween(6, 1);
+            positions = randBetween(6, 1);
             active = !active;
-            first = false;
         }
-
-        let speed = randBetween(100, 50);
 
         if (time === 0) {
             time = randBetween(5, 1);
             clearTimeout(id);
             rolled = true;
             active = false;
-            straighten()
+            dice.initializeStraighten(positions);
         } else {
-            switch (randBetween(2, 0)) {
-                case 0:
-                    dice.rotation.x += speed * dt;
-                    break;
-                case 1:
-                    dice.rotation.y += speed * dt;
-                    break;
-                case 2:
-                    dice.rotation.z += speed * dt;
-                    break;
-            }
+            dice.roll(75);
         }
-    } else if (rolled && !done) straighten();
+    } else if (rolled && !done) done = dice.straighten(dt);
     else {
         //TODO: CAMERA TORNA A POS ORIGINALE
         oldPos = positions;
@@ -314,26 +289,6 @@ function roll() {
         timeA = 1;
     }
 
-}
-function straighten() {
-    if (!first) {
-        first = true;
-        cumt = 0;
-        or = [dice.rotation.x, dice.rotation.y, dice.rotation.z]
-    }
-
-    cumt += dt;
-
-    if (cumt < 7) {
-        dice.rotation.x = erp(or[0], rotations[positions][0], cumt / 5);
-        dice.rotation.y = erp(or[1], rotations[positions][1], cumt / 5);
-        dice.rotation.z = erp(or[2], rotations[positions][2], cumt / 5);
-    } else {
-        dice.rotation.x = rotations[positions][0];
-        dice.rotation.y = rotations[positions][1];
-        dice.rotation.z = rotations[positions][2];
-        done = true;
-    }
 }
 
 //INIZIO GIOCO

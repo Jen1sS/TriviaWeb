@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import {ModelImporter} from "./ModelImporter.js";
+import {ModelImporter} from "./Importers.js";
 
 let mi = new ModelImporter();
 
