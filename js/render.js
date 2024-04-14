@@ -181,7 +181,7 @@ function go() {
             travelTime = 2;
             if (position + 1 === board.getCells().length) pos = 0;
             else pos = position + 1;
-            end = new Vector3(board.getCellPosition(pos)[0], board.getCellPosition(pos)[1] + 0.25, board.getCellPosition(pos)[2]);
+            end = new Vector3(board.getCellPosition(pos)[0], board.getCellPosition(pos)[1], board.getCellPosition(pos)[2]);
             start()
             positions--;
             asked = false;
@@ -203,13 +203,15 @@ function start() {
     reset = true
     if (travelTime <= 1) {
 
+        console.log(travelTime)
+
         if (!animationStart) {
             player.play("walk")
             animationStart = true;
         }
 
         player.lerpPosition(end, 1 - travelTime);
-        travelTime -= 0.01;
+        travelTime -= 0.0001;
         posLook = player.getPosition();
         camera.lookAt(posLook)
     } else {
@@ -219,7 +221,7 @@ function start() {
         travelTime -= 0.005;
     }
 
-    if (travelTime >= 0.01) setTimeout(start, 5);
+    if (travelTime >= 0.98) setTimeout(start, 5);
     else {
         setTimeout(go, 100);
         animationStart = false;

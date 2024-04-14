@@ -108,10 +108,9 @@ export class AnimationManager {
         if (this.lastCalled!==name) {
             const nextAction = this.mixer.clipAction(this.animations[name]);
             this.activeAction.crossFadeTo(nextAction, time, false);
-            setTimeout(() => {
-                this.stopAll();
-                this.playAnimation(name)
-            }, time);
+            this.stopAll() // FA SCHIFO MA NON RIESCO A METTERE APPOSTO
+            this.playAnimation(name)
+
             this.playing = true;
         }
 
