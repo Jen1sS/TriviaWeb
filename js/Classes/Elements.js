@@ -91,7 +91,7 @@ export class Player {
         this.player = null;
         this.aniP = null;
         this.generated = false;
-        this.position = 33;
+        this.position = 0; //seleziona la pos iniziale
 
 
         mi.importWithName("../models/avatar.glb", "player")
@@ -152,6 +152,27 @@ export class Player {
     }
     update(dt){
         if (this.aniP !== null) this.aniP.update(dt);
+
+        if (this.readyToPlay()) {
+            if (player.getOnCell() === 26) {
+                player.rotateY(Math.PI * 2);
+            } else {
+                switch (Math.floor(player.getOnCell() / 9)) {
+                    case 0:
+                        player.rotateY(Math.PI / 2);
+                        break;
+                    case 1:
+                        player.rotateY(Math.PI);
+                        break;
+                    case 2:
+                        player.rotateY(Math.PI * 1.5);
+                        break;
+                    case 3:
+                        player.rotateY(Math.PI * 2);
+                        break;
+                }
+            }
+        }
     }
 
 }
@@ -196,6 +217,8 @@ export class Hearts {
     moveLastHeartY(pos){
         this.hearts[lives].position.y += pos;
         this.heartLight[lives].position.y += pos;
+        this.heartLight[lives].power=0;
+
     }
     getLastHeartY(){
         return this.hearts[lives].position.y;

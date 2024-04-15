@@ -106,16 +106,22 @@ export class AnimationManager {
     lastCalled;
     transitionTo(name, time) {
         if (this.lastCalled!==name) {
-            const nextAction = this.mixer.clipAction(this.animations[name]);
-            this.activeAction.crossFadeTo(nextAction, time, false);
-            this.stopAll() // FA SCHIFO MA NON RIESCO A METTERE APPOSTO
-            this.playAnimation(name)
+
+            this.lastAction=this.activeAction;
+            this.activeAction = this.mixer.clipAction(this.animations[name]);
+            console.log(name)
+            if (name==="walk") this.activeAction.timeScale=0.5;
+
+
+            this.lastAction.play();
+            this.lastAction.crossFadeTo(this.activeAction, time, false);
+            this.activeAction.enabled=true;
+            this.activeAction.play();
+
 
             this.playing = true;
         }
-
         this.lastCalled=name;
-
     }
 
     stopAll() {

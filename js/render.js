@@ -252,7 +252,6 @@ function animate() {
 
     player.update(dt);
 
-    updateDirection();
 
     if (points !== lastPoints) {
         for (let i = 0; i < num.length; i++) {
@@ -388,30 +387,6 @@ function animate() {
         }
     }
 }
-
-function updateDirection() {
-    if (player.readyToPlay()) {
-        if (player.getOnCell()===26){
-            player.rotateY(Math.PI * 2);
-        } else {
-            switch (Math.floor(player.getOnCell() / 9)) {
-                case 0:
-                    player.rotateY(Math.PI / 2);
-                    break;
-                case 1:
-                    player.rotateY(Math.PI);
-                    break;
-                case 2:
-                    player.rotateY(Math.PI * 1.5);
-                    break;
-                case 3:
-                    player.rotateY(Math.PI * 2);
-                    break;
-            }
-        }
-    }
-}
-
 //REVEAL DEL SLICE DELLA MATERIA FATTA
 function revealGuessed() {
     if (board.getSlice(color).position.y >= 2) {
