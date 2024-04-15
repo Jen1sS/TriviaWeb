@@ -391,19 +391,23 @@ function animate() {
 
 function updateDirection() {
     if (player.readyToPlay()) {
-        switch (Math.floor(player.getOnCell() / 9)) {
-            case 0:
-                player.rotateY(Math.PI / 2);
-                break;
-            case 1:
-                player.rotateY(Math.PI);
-                break;
-            case 2:
-                player.rotateY(Math.PI * 1.5);
-                break;
-            case 3:
-                player.rotateY(Math.PI * 2);
-                break;
+        if (player.getOnCell()===26){
+            player.rotateY(Math.PI * 2);
+        } else {
+            switch (Math.floor(player.getOnCell() / 9)) {
+                case 0:
+                    player.rotateY(Math.PI / 2);
+                    break;
+                case 1:
+                    player.rotateY(Math.PI);
+                    break;
+                case 2:
+                    player.rotateY(Math.PI * 1.5);
+                    break;
+                case 3:
+                    player.rotateY(Math.PI * 2);
+                    break;
+            }
         }
     }
 }

@@ -91,7 +91,7 @@ export class Player {
         this.player = null;
         this.aniP = null;
         this.generated = false;
-        this.position = 0;
+        this.position = 33;
 
 
         mi.importWithName("../models/avatar.glb", "player")
