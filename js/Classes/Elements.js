@@ -91,6 +91,7 @@ export class Player {
         this.player = null;
         this.aniP = null;
         this.generated = false;
+        this.position = 0;
 
 
         mi.importWithName("../models/avatar.glb", "player")
@@ -106,7 +107,7 @@ export class Player {
         if (!this.generated) {
             this.generated = true;
             this.player = mi.getModel("player");
-            this.player.position.set(board.getCellPosition(position)[0], board.getCellPosition(position)[1], board.getCellPosition(position)[2]); //prendo posizione casella 0
+            this.player.position.set(board.getCellPosition(this.position)[0], board.getCellPosition(this.position)[1], board.getCellPosition(this.position)[2]); //prendo posizione casella 0
             this.player.rotation.y += Math.PI / 2;
 
             this.aniP = new AnimationManager(this.player);
@@ -137,6 +138,15 @@ export class Player {
     getPosition(){
         return this.player.position;
     }
+
+    getOnCell(){
+        return this.position;
+    }
+
+    setOnCell(value){
+        this.position=value;
+    }
+
     lerpPosition(destination,alpha){
         this.player.position.lerp(destination, alpha);
     }

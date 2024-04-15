@@ -14,9 +14,10 @@ let curState = "WAITING";
 //PLAYER
 let totalLives;
 let lives = 5;
-let position = 0;
 let completed = {0xd900ff: false, 0x1e00ff: false, 0x00f2ff: false, 0x00ff3c: false, 0xfbff00: false}
 let oldPos = 0; //ultima posizione
+let won;
+
 
 //ROLL
 let positions = 0; //roll uscito
@@ -40,6 +41,9 @@ let color = null; //colore della casella indovinata
 
 //DELTA TIME
 let dt;
+
+//PLAYER
+let player;
 
 
 
@@ -108,11 +112,11 @@ async function getQuestions(color, number) {
 //Prende la prossima domanda e in caso non ci sia fa un fetch
 function next() {
     if (!started) {
-        getQuestions(c[position], 1).then(r => loadQuestion());
+        getQuestions(c[player.getOnCell()], 1).then(r => loadQuestion());
         return;
     }
     if (quest.length > 0) loadQuestion();
-    else getQuestions(c[position], 1).then(r => loadQuestion());
+    else getQuestions(c[player.getOnCell()], 1).then(r => loadQuestion());
 }
 
 
@@ -171,7 +175,7 @@ function verify(num) {
     if (!end) {
         if (quest[quest.length - 1].getRightAnswer() === num) {
 
-            completed[c[position]] = true;
+            completed[c[player.getOnCell()]] = true;
 
             //update stats bar
             const tas = timer
@@ -190,7 +194,7 @@ function verify(num) {
             }
             points += point;
             clearTimeout(decrementTimer);
-            color = c[position];
+            color = c[player.getOnCell()];
             setTimeout(hideT, 750)
         } else {
             lives--;
@@ -233,10 +237,12 @@ function decrementTimer() {
 
 // Nascondono la domanda fatta dalla pagina
 function hideF() {
+    won=false;
     hide(false)
 }
 
 function hideT() {
+    won=true;
     hide(true)
 }
 

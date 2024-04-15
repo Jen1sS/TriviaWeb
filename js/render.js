@@ -25,7 +25,6 @@ let dl = null;
 let dl2 = null;
 
 //PLAYER
-let player;
 let insertedP = false;
 
 //DICE
@@ -61,7 +60,6 @@ let mi = new ModelImporter();
 //ADD
 let added = false;
 
-let won;
 let finalAnimation;
 
 //TEXT
@@ -176,17 +174,17 @@ function go() {
     else {
         reset = false;
         if (positions !== 0) {
-            player.setPosition(board.getCellPosition(position)[0], board.getCellPosition(position)[1], board.getCellPosition(position)[2]);
+            player.setPosition(board.getCellPosition(player.getOnCell())[0], board.getCellPosition(player.getOnCell())[1], board.getCellPosition(player.getOnCell())[2]);
 
             travelTime = 2;
-            if (position + 1 === board.getCells().length) pos = 0;
-            else pos = position + 1;
+            if (player.getOnCell() + 1 === board.getCells().length) pos = 0;
+            else pos = player.getOnCell() + 1;
             end = new Vector3(board.getCellPosition(pos)[0], board.getCellPosition(pos)[1], board.getCellPosition(pos)[2]);
             start()
             positions--;
             asked = false;
 
-            position = pos;
+            player.setOnCell(pos)
 
         } else if (curState !== "WAITING") {
             curState = "QUESTION"
@@ -202,8 +200,6 @@ function start() {
     backTime = 0;
     reset = true
     if (travelTime <= 1) {
-
-        console.log(travelTime)
 
         if (!animationStart) {
             player.play("walk")
@@ -323,7 +319,6 @@ function animate() {
                 case "REVEAL":
 
                     player.play("win")
-                    won = true;
 
                     revealGuessed();
                     break;
@@ -396,7 +391,7 @@ function animate() {
 
 function updateDirection() {
     if (player.readyToPlay()) {
-        switch (Math.floor(position / 9)) {
+        switch (Math.floor(player.getOnCell() / 9)) {
             case 0:
                 player.rotateY(Math.PI / 2);
                 break;
