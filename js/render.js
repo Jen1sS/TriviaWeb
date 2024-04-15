@@ -395,7 +395,7 @@ function animate() {
 }
 
 function updateDirection() {
-    if (loaded) {
+    if (player.readyToPlay()) {
         switch (Math.floor(position / 9)) {
             case 0:
                 player.rotateY(Math.PI / 2);

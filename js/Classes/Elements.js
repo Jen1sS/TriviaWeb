@@ -99,6 +99,7 @@ export class Player {
         return mi.everythingLoaded();
     }
     readyToPlay() {
+        if (this.aniP===null) return false;
         return this.aniP.everythingLoaded()
     }
     generate(board) {
@@ -128,7 +129,7 @@ export class Player {
         return this.player;
     }
     rotateY(angle){
-        player.rotation.y = angle;
+        this.player.rotation.y = angle;
     }
     setPosition(x,y,z){
         this.player.position.set(x,y,z);
