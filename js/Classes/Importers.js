@@ -109,7 +109,6 @@ export class AnimationManager {
 
             this.lastAction=this.activeAction;
             this.activeAction = this.mixer.clipAction(this.animations[name]);
-            console.log(name)
             if (name==="walk") this.activeAction.timeScale=0.5;
 
 
