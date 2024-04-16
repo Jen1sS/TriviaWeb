@@ -12,7 +12,6 @@ let started = false;
 let curState = "WAITING";
 
 //PLAYER
-let totalLives;
 let lives = 5;
 let completed = {0xd900ff: false, 0x1e00ff: false, 0x00f2ff: false, 0x00ff3c: false, 0xfbff00: false}
 let oldPos = 0; //ultima posizione
@@ -194,10 +193,12 @@ function verify(num) {
             }
             points += point;
             clearTimeout(decrementTimer);
+            document.getElementById("question").style.background = "radial-gradient(circle, rgba(149,255,166,1) 0%, rgba(0,255,72,1) 100%)";
             color = c[player.getOnCell()];
             setTimeout(hideT, 750)
         } else {
             lives--;
+            document.getElementById("question").style.background = "radial-gradient(circle, rgba(255,149,149,1) 0%, rgba(255,0,0,1) 100%)"
             clearTimeout(decrementTimer);
             setTimeout(hideF, 750)
         }

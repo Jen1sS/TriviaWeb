@@ -74,6 +74,12 @@ let lastPoints = 0;
  * Inizializza il motore e il gioco
  */
 async function initScene() {
+
+
+    if (lives>5){
+        console.log("Too many hearts, 5 is the max")
+        lives=5;
+    }
     if (renderer != null) return;
 
 

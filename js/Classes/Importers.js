@@ -102,7 +102,6 @@ export class AnimationManager {
     }
 
 
-    //TODO: FA MA MALE CHIEDI AL SAMMA
     lastCalled;
     transitionTo(name, time) {
         if (this.lastCalled!==name) {
