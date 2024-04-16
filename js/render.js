@@ -15,9 +15,7 @@ let clock = null;    // Oggetto per la gestione del timinig della scena
 //BOARD
 let board;
 let slice = {};
-
-//PLANE
-let plane;
+let ready = false;
 
 
 //LUCE
@@ -39,10 +37,8 @@ let insertedH = false;
 //Visuali della camera necessarie per lerping
 let endLook;
 let posLook;
-const oriLook = new Vector3(0, 0, 0);
+const oriLook = new THREE.Vector3(0, 5, 0);
 
-let did = false //WIN
-let loaded = false;
 
 // LERPING
 let travelTime;
@@ -74,7 +70,7 @@ let lastPoints = 0;
  * Inizializza il motore e il gioco
  */
 async function initScene() {
-    
+
     if (renderer != null) return;
 
 
@@ -91,8 +87,8 @@ async function initScene() {
 
     //SETUP CAMERA
     camera = new THREE.PerspectiveCamera(70, width / height, 0.1, 500);
-    camera.position.set(3.5, 9.5, 3.5);
-    camera.lookAt(0, 0, 0);
+    camera.position.set(40, 30, 40);
+    camera.lookAt(0,5,0)
     clock = new THREE.Clock();
 
     //CREAZIONE SCENE
@@ -101,25 +97,6 @@ async function initScene() {
 
     //CREAZIONE TABELLONE
     board = new Board();
-    board.generate();
-
-    c = board.getColors(); //da fixare
-
-
-    slice = board.getSlices();
-    const cells = board.getCells();
-
-    for (let i = 0; i < slice.length; i++) scene.add(slice[i])
-    for (let i = 0; i < cells.length; i++) scene.add(cells[i])
-    scene.add(board.getTable())
-
-    //CREAZIONE PLANE
-    const g4 = new THREE.PlaneGeometry(10000, 10000);
-    const m4 = new THREE.MeshPhysicalMaterial({color: 0x33ADFF, side: THREE.DoubleSide});
-    plane = new THREE.Mesh(g4, m4);
-    plane.receiveShadow = true;
-    plane.position.y = 1.2
-    plane.rotateX(Math.PI / 2)
 
     //CREAZIONE DADO - NEW
     dice = new Dice();
@@ -133,8 +110,8 @@ async function initScene() {
     hearts = new Hearts();
 
     //CREAZIONE LUCE DEL TABELLONE
-    dl = new THREE.PointLight(0xFFFFFF, 20);
-    dl.position.set(0, 5, 0);
+    dl = new THREE.PointLight(0xfffbcc, 5000);
+    dl.position.set(20, 40, 0);
     dl.castShadow = true;
 
     //CREAZIONE LUCE DEL DADO
@@ -142,15 +119,10 @@ async function initScene() {
     dl2.position.set(12, 8, 6);
     dl2.castShadow = true;
 
-    //NUMERI
-    writer = new Writer(new Vector3(board.getCellPosition(0)[0] + 0.7, 1.2, board.getCellPosition(0)[2] + 1.1), scene);
-    writer.write("000");
-
 
     //AGGIUNTA ALLA SCENA (altri messi perche sono in un array)
     scene.add(dl);
     scene.add(dl2);
-    scene.add(plane);
 
     //Inizializzazione visuale per lerp
     posLook = new Vector3(0, 0, 0);
@@ -160,14 +132,6 @@ async function initScene() {
 
 
 }
-
-//LOADER
-function loadColorTexture(path) {
-    const texture = loader.load(path);
-    texture.colorSpace = THREE.SRGBColorSpace;
-    return texture;
-}
-
 
 //GESTIONE MOVIMENTO
 function go() {
@@ -213,7 +177,7 @@ function start() {
         camera.lookAt(posLook)
     } else {
         endLook = player.getPosition();
-        lerpCamera(posLook, endLook, 2 - travelTime);
+        lerpCameraVision(posLook, endLook, 2 - travelTime);
         camera.position.lerp(new Vector3(3.5, 7.5, 3.5), 2 - travelTime)
         travelTime -= 0.005;
     }
@@ -229,20 +193,23 @@ function start() {
 
 //LERPING VISUALE
 function resetCamera(alpha) {
-    lerpCamera(player.getPosition(), oriLook, alpha)
+    lerpCameraVision(player.getPosition(), oriLook, alpha)
 }
 
-function lerpCamera(v1, v2, alpha) {
-    let currentLookAt = new THREE.Vector3();
-    currentLookAt.lerpVectors(v1, v2, alpha);
+function lerpCameraVision(v1, v2, alpha) {
+    let currentLookAt = v1;
+    currentLookAt.lerp(v2, alpha);
     camera.lookAt(currentLookAt);
 }
 
 function watchDice(alpha) {
-    lerpCamera(oriLook, diceLook, 1 - alpha)
+    lerpCameraVision(oriLook, diceLook, 1 - alpha)
     camera.position.lerp(new Vector3(12, 8, 6), 1 - alpha)
 }
 
+
+//posizionamento camera a start
+let transition=0;
 function animate() {
     dt = clock.getDelta();
 
@@ -261,17 +228,19 @@ function animate() {
         }
         writer.write(points + "");
     }
-    if (writer.ready()) {
-        lastPoints = points;
+    if (writer!==undefined) {
+        if (writer.ready()) {
+            lastPoints = points;
 
-        num = writer.get(1.2);
-        for (let i = 0; i < num.length; i++) {
-            numLight.push(new THREE.PointLight(0x0000FF, 3));
-            numLight[i].position.set(num[i].position.x, num[i].position.y + 0.2, num[i].position.z);
-            numLight[i].castShadow = true;
-            numLight[i].receiveShadow = true;
-            scene.add(num[i]);
-            scene.add(numLight[i]);
+            num = writer.get(1.2);
+            for (let i = 0; i < num.length; i++) {
+                numLight.push(new THREE.PointLight(0x0000FF, 3));
+                numLight[i].position.set(num[i].position.x, num[i].position.y + 0.2, num[i].position.z);
+                numLight[i].castShadow = true;
+                numLight[i].receiveShadow = true;
+                scene.add(num[i]);
+                scene.add(numLight[i]);
+            }
         }
     }
 
@@ -284,37 +253,78 @@ function animate() {
                     document.getElementById("play").style.display = "block"
                     added = true;
 
+                    //#region Table loading
+                    if (board.readyToGenerate() && !board.hasGenerated()) board.generate();
+                    else if (board.hasGenerated() && !ready) {
+                        c = board.getColors();
 
-                    if (player.readyToGenerate()) {
-                        player.generate(board);
-                        if (!insertedP) {
-                            insertedP = true;
-                            scene.add(player.getPlayer());
-                        }
 
-                        if (player.readyToPlay()) {
-                            player.play("idle")
+                        slice = board.getSlices();
+                        const cells = board.getCells();
+
+                        for (let i = 0; i < slice.length; i++) scene.add(slice[i])
+                        for (let i = 0; i < cells.length; i++) scene.add(cells[i])
+                        board.getWorld().position.y=0;
+                        scene.add(board.getTable())
+                        scene.add(board.getSkybox())
+                        scene.add(board.getWorld())
+
+                        //NUMERI
+                        writer = new Writer(new Vector3(board.getCellPosition(0)[0] + 0.7, 1.2, board.getCellPosition(0)[2] + 1.1), scene);
+                        writer.write("000");
+
+                        ready=true;
+                    }
+                    //#endregion
+
+                    if (ready) {
+                        //#region Loading elements
+                        if (player.readyToGenerate()) {
+                            player.generate(board);
+                            if (!insertedP) {
+                                insertedP = true;
+                                scene.add(player.getPlayer());
+                            }
+
+                            if (player.readyToPlay()) {
+                                player.play("idle")
+                            }
                         }
+                        if (dice.readyToGenerate()) {
+                            dice.generate();
+                            if (!insertedD) {
+                                insertedD = true;
+                                scene.add(dice.getDice());
+                            }
+                        }
+                        if (hearts.readyToGenerate()) {
+                            hearts.generate(board);
+                            if (!insertedH) {
+                                insertedH = true;
+                                let el = hearts.getElements()
+                                for (let i = 0; i < el.length; i++) for (let j = 0; j < el[i].length; j++) scene.add(el[i][j]);
+                            }
+                        }
+                        //#endregion
+                        board.getWorld().rotation.y+=0.1*dt;
+                        board.getSkybox().rotation.y+=0.1*dt;
                     }
 
+                    break;
+                case "PREPARING":
+                    const world = board.getWorld();
+                    const sky = board.getSkybox();
 
-                    if (dice.readyToGenerate()) {
-                        dice.generate();
-                        if (!insertedD) {
-                            insertedD = true;
-                            scene.add(dice.getDice());
-                        }
+                    if (world.rotation.y>0.001){
+                        world.rotation.y-=(world.rotation.y*5)*dt;
+                        sky.rotation.y-=(world.rotation.y*5)*dt;
+                    } else if (transition<0.1){
+                        world.rotation.y=0;
+                        sky.rotation.y=0;
+                        transition+=0.1*dt;
+                        lerpCameraVision(oriLook,new THREE.Vector3(23,4,4),transition)
+                        camera.position.lerp(new Vector3(18,8,4),transition)
                     }
-
-                    if (hearts.readyToGenerate()) {
-                        hearts.generate(board);
-                        if (!insertedH) {
-                            insertedH = true;
-                            let el = hearts.getElements()
-                            for (let i = 0; i < el.length; i++) for (let j = 0; j < el[i].length; j++) scene.add(el[i][j]);
-                        }
-                    }
-
                     break;
                 case "REVEAL":
 
@@ -402,13 +412,11 @@ function revealGuessed() {
     } else board.getSlice(color).position.y += 0.005;
 }
 
-window.addEventListener('resize', onWindowResize, false)
 
+window.addEventListener('resize', onWindowResize, false)
 function onWindowResize() {
     camera.aspect = window.innerWidth / window.innerHeight
     camera.updateProjectionMatrix()
     renderer.setSize(window.innerWidth, window.innerHeight)
 }
-
-
 window.onload = initScene;

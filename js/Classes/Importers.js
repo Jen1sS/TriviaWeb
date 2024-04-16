@@ -10,6 +10,8 @@ export class ModelImporter {
         this.elementsLoaded = {};
     }
 
+
+
     async import(path) {
         this.importWithName(path,path)
     }
@@ -37,6 +39,15 @@ export class ModelImporter {
                 console.log("ModelImporter - error:" + error);
             }
         );
+    }
+
+    addShadows(pathOrName){
+        this.elementsLoaded[pathOrName].traverse(function (node) {
+            if (node.isMesh){
+                node.castShadow=true;
+                node.receiveShadow=true;
+            }
+        });
     }
 
     everythingLoaded() {

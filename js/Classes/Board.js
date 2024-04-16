@@ -1,29 +1,37 @@
 import * as THREE from "three";
 import {MeshPhysicalMaterial} from "three";
+import {ModelImporter} from "./Importers.js";
 
 
 let generated;
+const mi = new ModelImporter();
 
 export class Board {
     constructor() {
         this.cells = [];
         this.table = null;
+        this.island = null;
+        this.skybox = null;
         this.slices = {};
+        this.ready = false;
 
         this.cellColor = [0xd900ff, 0x1e00ff, 0x00f2ff, 0x00ff3c, 0xfbff00, 0xd900ff, 0x1e00ff, 0x00f2ff, 0x00ff3c, 0xfbff00, 0xd900ff, 0x1e00ff, 0x00f2ff, 0x00ff3c, 0xfbff00, 0xd900ff, 0x1e00ff, 0x00f2ff, 0x00ff3c, 0xfbff00, 0xd900ff, 0x1e00ff, 0x00f2ff, 0x00ff3c, 0xfbff00, 0xd900ff, 0x1e00ff, 0x00f2ff, 0x00ff3c, 0xfbff00, 0xd900ff, 0x1e00ff, 0x00f2ff, 0x00ff3c]
         this.cellG = new THREE.PlaneGeometry(0.5, 0.5, 1);
         this.cellM = [];
         this.cellP = [];
-        
+
         this.tableG = new THREE.BoxGeometry(5.2, 5.5, 0.5);
         this.tableM = new THREE.MeshPhysicalMaterial({color: 0x7FD4FF});
-        
+
         this.slicesG = new THREE.ConeGeometry(0.5, 1, 4);
         this.slicesM = [];
+
+        mi.importWithName("../models/world.glb","world");
+        mi.importWithName("../models/skybox.glb","skybox");
     }
 
     generate() {
-        if (!generated) {
+        if (!generated && mi.everythingLoaded()) {
             generated = true;
             //#region Generazione Caselle
             for (let i = 0; i < this.cellColor.length; i++) this.cellM.push(new MeshPhysicalMaterial({
@@ -69,6 +77,11 @@ export class Board {
             //#endregion
 
             //#region Generazione Table
+            //mi.addShadows("world")
+            this.island = mi.getModel("world");
+            this.skybox = mi.getModel("skybox")
+            this.skybox.scale.set(0.5,0.5,0.5)
+
             this.table = new THREE.Mesh(this.tableG, this.tableM);
             this.table.castShadow = true;
             this.table.receiveShadow = true;
@@ -100,6 +113,14 @@ export class Board {
 
     }
 
+    readyToGenerate(){
+        return mi.everythingLoaded();
+    }
+
+    hasGenerated(){
+        return generated;
+    }
+
     getCells(){
         return this.cells;
     }
@@ -116,6 +137,14 @@ export class Board {
 
     getSlice(color){
         return this.slices[color];
+    }
+
+    getWorld(){
+        return this.island;
+    }
+
+    getSkybox(){
+        return this.skybox;
     }
 
     getCellPosition(number){

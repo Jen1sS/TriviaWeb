@@ -300,6 +300,6 @@ function roll() {
 
 //INIZIO GIOCO
 function startGame() {
-    curState = "QUESTION"
+    curState = "PREPARING"
     document.getElementById("play").style.display = "none"
 }

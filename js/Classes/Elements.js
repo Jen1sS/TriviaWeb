@@ -36,6 +36,8 @@ export class Dice {
             this.dice = mi.getModel("dice");
             this.dice.position.set(this.position.x, this.position.y, this.position.z);
 
+            mi.addShadows("dice");
+
             this.dice.scale.x = 0.02;
             this.dice.scale.y = 0.02;
             this.dice.scale.z = 0.02;
@@ -107,8 +109,10 @@ export class Player {
         if (!this.generated) {
             this.generated = true;
             this.player = mi.getModel("player");
-            this.player.position.set(board.getCellPosition(this.position)[0], board.getCellPosition(this.position)[1], board.getCellPosition(this.position)[2]); //prendo posizione casella 0
+            this.player.position.set(board.getCellPosition(this.position)[0], 35, board.getCellPosition(this.position)[2]); //prendo posizione casella 0
             this.player.rotation.y += Math.PI / 2;
+
+            mi.addShadows("player");
 
             this.aniP = new AnimationManager(this.player);
             this.aniP.import("../animations/idle.glb", "idle");
@@ -198,8 +202,6 @@ export class Hearts {
                 this.hearts[i].scale.x = 0.15;
                 this.hearts[i].scale.y = 0.15;
                 this.hearts[i].scale.z = 0.15;
-                this.hearts[i].receiveShadow = true;
-                this.hearts[i].castShadow = true;
 
                 this.heartLight.push(new THREE.PointLight(0xFF0000, 3));
                 this.heartLight[i].position.set(board.getCellPosition(8 + i)[0] + 1.25, 2, board.getCellPosition(8 + i)[2] - i * 0.7);
