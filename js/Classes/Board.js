@@ -77,7 +77,7 @@ export class Board {
             //#endregion
 
             //#region Generazione Table
-            //mi.addShadows("world")
+            mi.addShadows("world")
             this.island = mi.getModel("world");
             this.skybox = mi.getModel("skybox")
             this.skybox.scale.set(0.5,0.5,0.5)

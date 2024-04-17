@@ -16,7 +16,6 @@ export class Writer {
             this.got = false;
             mi.clear();
             this.elements = [];
-            //for (let i = 0; i < text.length; i++) mi.importWithName("../models/heart.glb", i) //debug
             for (let i = 0; i < text.length; i++) mi.importWithName("../models/numbers/" + text.charAt(i) + ".glb", i)
         }
         this.lastReq = text;

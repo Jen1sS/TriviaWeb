@@ -109,7 +109,7 @@ export class Player {
         if (!this.generated) {
             this.generated = true;
             this.player = mi.getModel("player");
-            this.player.position.set(board.getCellPosition(this.position)[0], 35, board.getCellPosition(this.position)[2]); //prendo posizione casella 0
+            this.player.position.set(24, 50, 4); //prendo posizione casella 0
             this.player.rotation.y += Math.PI / 2;
 
             mi.addShadows("player");
@@ -121,6 +121,8 @@ export class Player {
             this.aniP.import("../animations/lost.glb", "lost");
             this.aniP.import("../animations/death.glb", "death");
             this.aniP.import("../animations/victory.glb", "victory");
+            this.aniP.import("../animations/falling.glb", "falling");
+            this.aniP.import("../animations/impact.glb", "impact");
         }
     }
     play(animation) {
@@ -213,7 +215,7 @@ export class Hearts {
     getElements(){
         let el=[];
         el.push(this.hearts);
-        el.push(this.heartLight);
+        //el.push(this.heartLight);
         return el;
     }
     moveLastHeartY(pos){

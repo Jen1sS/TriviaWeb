@@ -83,12 +83,12 @@ async function initScene() {
     renderer.setSize(width, height);
     renderer.setClearColor("black", 1);
     renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     document.getElementById("map").appendChild(renderer.domElement);
-
     //SETUP CAMERA
     camera = new THREE.PerspectiveCamera(70, width / height, 0.1, 500);
     camera.position.set(40, 30, 40);
-    camera.lookAt(0,5,0)
+    camera.lookAt(0, 5, 0)
     clock = new THREE.Clock();
 
     //CREAZIONE SCENE
@@ -111,8 +111,11 @@ async function initScene() {
 
     //CREAZIONE LUCE DEL TABELLONE
     dl = new THREE.PointLight(0xfffbcc, 5000);
-    dl.position.set(20, 40, 0);
+    dl.position.set(30, 40, 0);
     dl.castShadow = true;
+    dl.shadow.mapSize = new THREE.Vector2(16834, 16834);
+    dl.shadow.bias = -0.002;
+
 
     //CREAZIONE LUCE DEL DADO
     dl2 = new THREE.PointLight(0xFFFFFF, 20);
@@ -209,7 +212,10 @@ function watchDice(alpha) {
 
 
 //posizionamento camera a start
-let transition=0;
+let transition = 0;
+let falling = false;
+let impact = falling;
+
 function animate() {
     dt = clock.getDelta();
 
@@ -228,7 +234,7 @@ function animate() {
         }
         writer.write(points + "");
     }
-    if (writer!==undefined) {
+    if (writer !== undefined) {
         if (writer.ready()) {
             lastPoints = points;
 
@@ -250,7 +256,6 @@ function animate() {
             //AUTOMA A STATI FINITI
             switch (curState) {
                 case "WAITING":
-                    document.getElementById("play").style.display = "block"
                     added = true;
 
                     //#region Table loading
@@ -264,7 +269,7 @@ function animate() {
 
                         for (let i = 0; i < slice.length; i++) scene.add(slice[i])
                         for (let i = 0; i < cells.length; i++) scene.add(cells[i])
-                        board.getWorld().position.y=0;
+                        board.getWorld().position.y = 0;
                         scene.add(board.getTable())
                         scene.add(board.getSkybox())
                         scene.add(board.getWorld())
@@ -273,7 +278,7 @@ function animate() {
                         writer = new Writer(new Vector3(board.getCellPosition(0)[0] + 0.7, 1.2, board.getCellPosition(0)[2] + 1.1), scene);
                         writer.write("000");
 
-                        ready=true;
+                        ready = true;
                     }
                     //#endregion
 
@@ -284,10 +289,6 @@ function animate() {
                             if (!insertedP) {
                                 insertedP = true;
                                 scene.add(player.getPlayer());
-                            }
-
-                            if (player.readyToPlay()) {
-                                player.play("idle")
                             }
                         }
                         if (dice.readyToGenerate()) {
@@ -305,9 +306,11 @@ function animate() {
                                 for (let i = 0; i < el.length; i++) for (let j = 0; j < el[i].length; j++) scene.add(el[i][j]);
                             }
                         }
+                        document.getElementById("play").style.display = "block"
+
                         //#endregion
-                        board.getWorld().rotation.y+=0.1*dt;
-                        board.getSkybox().rotation.y+=0.1*dt;
+                        board.getWorld().rotation.y += 0.1 * dt;
+                        board.getSkybox().rotation.y += 0.1 * dt;
                     }
 
                     break;
@@ -315,16 +318,38 @@ function animate() {
                     const world = board.getWorld();
                     const sky = board.getSkybox();
 
-                    if (world.rotation.y>0.001){
-                        world.rotation.y-=(world.rotation.y*5)*dt;
-                        sky.rotation.y-=(world.rotation.y*5)*dt;
-                    } else if (transition<0.1){
-                        world.rotation.y=0;
-                        sky.rotation.y=0;
-                        transition+=0.1*dt;
-                        lerpCameraVision(oriLook,new THREE.Vector3(23,4,4),transition)
-                        camera.position.lerp(new Vector3(18,8,4),transition)
+                    if (world.rotation.y > 0.001) {
+                        world.rotation.y -= (world.rotation.y * 5) * dt;
+                        sky.rotation.y -= (world.rotation.y * 5) * dt;
+                    } else if (transition < 0.1) {
+                        world.rotation.y = 0;
+                        sky.rotation.y = 0;
+                        transition += 0.1 * dt;
+                        lerpCameraVision(oriLook, new THREE.Vector3(23, 8, 4), transition)
+                        camera.position.lerp(new THREE.Vector3(18, 8, 4), transition)
+                    } else if (player.getPosition().y>0.6){
+                        if (player.readyToPlay()) {
+                            if (!falling) {
+                                falling = true;
+                                player.play("falling");
+                            }
+
+                            if (player.getPosition().y<8){
+                                camera.lookAt(player.getPosition());
+                            }
+
+                            player.lerpPosition(new THREE.Vector3(24,0.58,4),transition)
+                            transition+=0.1*dt;
+                        }
                     }
+
+                    if (!impact && player.getPosition().y<0.8) {
+                        impact=true
+                        player.playOnce("impact")
+                    }
+                    console.log(player.getPosition().y)
+
+
                     break;
                 case "REVEAL":
 
@@ -398,6 +423,7 @@ function animate() {
         }
     }
 }
+
 //REVEAL DEL SLICE DELLA MATERIA FATTA
 function revealGuessed() {
     if (board.getSlice(color).position.y >= 2) {
@@ -414,9 +440,11 @@ function revealGuessed() {
 
 
 window.addEventListener('resize', onWindowResize, false)
+
 function onWindowResize() {
     camera.aspect = window.innerWidth / window.innerHeight
     camera.updateProjectionMatrix()
     renderer.setSize(window.innerWidth, window.innerHeight)
 }
+
 window.onload = initScene;
