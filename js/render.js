@@ -3,6 +3,7 @@ import {AnimationManager, ModelImporter} from './Classes/Importers.js';
 import {Board} from "./Classes/Board.js";
 import {Player} from "./Classes/Elements.js";
 
+
 //Necessari per ThreeJs
 let gl = null;       // Il canvas in cui renderizzare
 let renderer = null; // Il motore di render
@@ -81,7 +82,8 @@ async function initScene() {
     dl = new THREE.PointLight(0xfffbcc, 5000);
     dl.position.set(30, 40, 0);
     dl.castShadow = true;
-    dl.shadow.mapSize = new THREE.Vector2(4096, 4096);
+    const ShadowmapSize = 1024
+    dl.shadow.mapSize = new THREE.Vector2(ShadowmapSize, ShadowmapSize);
     dl.shadow.bias = -0.002;
     scene.add(dl);
     //#endregion
@@ -103,6 +105,7 @@ function lerpCameraVision(v1, v2, alpha) {
 let transition = 0;
 let falling = false;
 let impact = falling;
+let start = false;
 
 function animate() {
     dt = clock.getDelta();
@@ -190,9 +193,25 @@ function animate() {
                 case "CUTSECE_INITIAL": //PRIMA CUTSENE
                     if (transition < 0.1) {
                         camera.position.lerp(l1Pos, transition);
-                        lerpCameraVision(curLook,l1Look,transition);
+                        lerpCameraVision(curLook,l1Look,transition)
                         transition += 0.1 * dt;
+                    } else if (transition < 0.2){
+                        if (!start) {
+                            start=true;
+                            player.rotateY(3.8);
+                            player.play("walk")
+                        }
+                        if (transition>0.106) transition=0.2;
+                        player.lerpPosition(new THREE.Vector3(20,2,-3.5),transition-0.1);
+                        //transition += 0.001 * dt;
+                        transition=0.2;
+                        player.setPosition(20,2,-2.5);
+                    } else if (start) {
+                        start=!start;
+                        player.play("idle");
                     }
+                    camera.lookAt(player.getPosition())
+
                     break;
             }
         } else {
@@ -208,5 +227,13 @@ function onWindowResize() {
     camera.updateProjectionMatrix()
     renderer.setSize(window.innerWidth, window.innerHeight)
 }
+
+document.addEventListener('keydown', function(event) {
+    console.log(player.getPosition())
+    if (event.key === "s") player.getPosition().x+=0.1;
+    if (event.key === "w") player.getPosition().x-=0.1;
+    if (event.key === "a") player.getPosition().z+=0.1;
+    if (event.key === "d") player.getPosition().z-=0.1;
+});
 
 window.onload = initScene;
