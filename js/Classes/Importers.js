@@ -119,7 +119,6 @@ export class AnimationManager {
 
             this.lastAction=this.activeAction;
             this.activeAction = this.mixer.clipAction(this.animations[name]);
-            if (name==="walk") this.activeAction.timeScale=0.5;
 
 
             this.lastAction.play();
@@ -150,9 +149,25 @@ export class AnimationManager {
         setTimeout(() => {
             this.stopAll();
             this.playAnimation(name)
+            this.playing = false;
         }, time);
         this.playing = true;
         this.lastCalled=name;
 
+    }
+
+    transitionAndDoOnce(name,time){
+        this.lastAction=this.activeAction;
+        this.activeAction = this.mixer.clipAction(this.animations[name]);
+
+
+        this.lastAction.play();
+        this.lastAction.crossFadeTo(this.activeAction, time, false);
+        this.activeAction.enabled=true;
+        this.activeAction.clampWhenFinished=true;
+        this.activeAction.repetitions=1;
+        this.activeAction.play();
+
+        this.playing = true;
     }
 }

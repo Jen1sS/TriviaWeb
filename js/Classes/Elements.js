@@ -110,27 +110,27 @@ export class Player {
             this.generated = true;
             this.player = mi.getModel("player");
             this.player.position.set(24, 50, 4); //prendo posizione casella 0
+            this.player.scale.set(0.7,0.7,0.7);
             this.player.rotation.y += Math.PI / 2;
 
             mi.addShadows("player");
 
             this.aniP = new AnimationManager(this.player);
             this.aniP.import("../animations/idle.glb", "idle");
-            this.aniP.import("../animations/walk.glb", "walk");
-            this.aniP.import("../animations/win.glb", "win");
-            this.aniP.import("../animations/lost.glb", "lost");
-            this.aniP.import("../animations/death.glb", "death");
-            this.aniP.import("../animations/victory.glb", "victory");
             this.aniP.import("../animations/falling.glb", "falling");
             this.aniP.import("../animations/impact.glb", "impact");
+            this.aniP.import("../animations/standing.glb", "standing");
         }
     }
     play(animation) {
         if (!this.aniP.isPlaying()) this.aniP.playAnimation(animation);
-        else this.aniP.transitionTo(animation, 0.2)
+        else this.aniP.transitionTo(animation, 0.5)
     }
     playOnce(animation){
-        this.aniP.doOnce(animation, 0.2)
+        this.aniP.doOnce(animation, 0.5)
+    }
+    playOnceWithTransition(animation){
+        this.aniP.transitionAndDoOnce(animation, 0.5)
     }
     getPlayer() {
         return this.player;

@@ -25,11 +25,14 @@ let island;
 let addedW = false;
 
 //Visuali della camera necessarie per lerping
-const oriLook = new THREE.Vector3(0,5,0);
-//visuali lerp cutsene iniziale
+let curLook = new THREE.Vector3(0, 5, 0);
+//cutsene iniziale
 const portLook = new THREE.Vector3(23, 5, 4);
 const portPos = new THREE.Vector3(18, 8, 4);
 const fallPos = new THREE.Vector3(24, 0.58, 4);
+//livello 1
+const l1Look = new THREE.Vector3(10,-3,-15);
+const l1Pos = new THREE.Vector3(22, 4, -1);
 
 //MODELS
 let mi = new ModelImporter();
@@ -115,6 +118,9 @@ function animate() {
     if (mi.everythingLoaded()) {
         if (lives !== 0) {
             //AUTOMA A STATI FINITI
+            if (addedW){
+                sky.rotation.y += 0.05 * dt;
+            }
             switch (curState) {
                 case "WAITING": //CARICAMENTO DEL MONDO
                     added = true;
@@ -137,10 +143,11 @@ function animate() {
                         sky = world.getSkybox();
                     }
 
-                    if (addedP && addedW){
+
+
+                    if (addedP && addedW) {
                         document.getElementById("play").style.display = "block"
-                        island.rotation.y+=0.1*dt;
-                        sky.rotation.y+=0.1*dt;
+                        island.rotation.y += 0.1 * dt;
                     }
 
                     break;
@@ -148,12 +155,11 @@ function animate() {
 
                     if (island.rotation.y > 0.001) {
                         island.rotation.y -= (island.rotation.y * 5) * dt;
-                        sky.rotation.y -= (island.rotation.y * 5) * dt;
                     } else if (transition < 0.1) {
                         island.rotation.y = 0;
                         sky.rotation.y = 0;
                         transition += 0.1 * dt;
-                        lerpCameraVision(oriLook, portLook, transition)
+                        lerpCameraVision(curLook, portLook, transition)
                         camera.position.lerp(portPos, transition)
                     } else if (player.getPosition().y > 0.6) {
                         if (player.readyToPlay()) {
@@ -169,20 +175,27 @@ function animate() {
 
                     if (!impact && player.getPosition().y < 0.8) {
                         impact = true;
-                        player.playOnce("impact");
+                        player.playOnceWithTransition("impact");
+                        setTimeout(() => {
+                            curLook = portLook;
+                            player.playOnceWithTransition("standing");
+                            setTimeout(() => {
+                                player.play("idle")
+                                transition = 0;
+                                curState = "CUTSECE_INITIAL";
+                            }, 15000) //15000 val giusto
+                        }, 3000) //3000 val giusto
                     }
                     break;
                 case "CUTSECE_INITIAL": //PRIMA CUTSENE
-
+                    if (transition < 0.1) {
+                        camera.position.lerp(l1Pos, transition);
+                        lerpCameraVision(curLook,l1Look,transition);
+                        transition += 0.1 * dt;
+                    }
                     break;
             }
         } else {
-            if (!finalAnimation) {
-                finalAnimation = true;
-                setTimeout(() => {
-                    player.playOnce("death")
-                }, 1000)
-            }
         }
     }
 }
