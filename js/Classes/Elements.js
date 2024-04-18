@@ -105,7 +105,7 @@ export class Player {
         if (this.aniP===null) return false;
         return this.aniP.everythingLoaded()
     }
-    generate(board) {
+    generate() {
         if (!this.generated) {
             this.generated = true;
             this.player = mi.getModel("player");
@@ -158,27 +158,6 @@ export class Player {
     }
     update(dt){
         if (this.aniP !== null) this.aniP.update(dt);
-
-        if (this.readyToPlay()) {
-            if (player.getOnCell() === 26) {
-                player.rotateY(Math.PI * 2);
-            } else {
-                switch (Math.floor(player.getOnCell() / 9)) {
-                    case 0:
-                        player.rotateY(Math.PI / 2);
-                        break;
-                    case 1:
-                        player.rotateY(Math.PI);
-                        break;
-                    case 2:
-                        player.rotateY(Math.PI * 1.5);
-                        break;
-                    case 3:
-                        player.rotateY(Math.PI * 2);
-                        break;
-                }
-            }
-        }
     }
 
 }
