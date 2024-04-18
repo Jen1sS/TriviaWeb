@@ -12,6 +12,7 @@
   },
   "private": true,
   "dependencies": {
+    "cannon": "^0.6.2",
     "math": "^0.0.3",
     "three": "^0.162.0",
     "three-bmfont-text": "^3.0.1"

@@ -112,7 +112,7 @@ function animate() {
     renderer.render(scene, camera);
 
 
-    player.update(dt);
+    if (addedW) player.update(dt, world.getWorld());
 
 
     if (mi.everythingLoaded()) {
@@ -183,8 +183,8 @@ function animate() {
                                 player.play("idle")
                                 transition = 0;
                                 curState = "CUTSECE_INITIAL";
-                            }, 15000) //15000 val giusto
-                        }, 3000) //3000 val giusto
+                            }, 10) //15000 val giusto
+                        }, 10) //3000 val giusto
                     }
                     break;
                 case "CUTSECE_INITIAL": //PRIMA CUTSENE

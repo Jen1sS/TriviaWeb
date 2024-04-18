@@ -88,29 +88,34 @@ export class Dice {
         return this.dice;
     }
 }
+
 export class Player {
     constructor() {
         this.player = null;
         this.aniP = null;
         this.generated = false;
         this.position = 0; //seleziona la pos iniziale
+        this.raycaster = new THREE.Raycaster();
 
 
         mi.importWithName("../models/avatar.glb", "player")
     }
+
     readyToGenerate() {
         return mi.everythingLoaded();
     }
+
     readyToPlay() {
-        if (this.aniP===null) return false;
+        if (this.aniP === null) return false;
         return this.aniP.everythingLoaded()
     }
+
     generate() {
         if (!this.generated) {
             this.generated = true;
             this.player = mi.getModel("player");
             this.player.position.set(24, 50, 4); //prendo posizione casella 0
-            this.player.scale.set(0.7,0.7,0.7);
+            this.player.scale.set(0.7, 0.7, 0.7);
             this.player.rotation.y += Math.PI / 2;
 
             mi.addShadows("player");
@@ -122,60 +127,75 @@ export class Player {
             this.aniP.import("../animations/standing.glb", "standing");
         }
     }
+
     play(animation) {
         if (!this.aniP.isPlaying()) this.aniP.playAnimation(animation);
         else this.aniP.transitionTo(animation, 0.5)
     }
-    playOnce(animation){
+
+    playOnce(animation) {
         this.aniP.doOnce(animation, 0.5)
     }
-    playOnceWithTransition(animation){
+
+    playOnceWithTransition(animation) {
         this.aniP.transitionAndDoOnce(animation, 0.5)
     }
+
     getPlayer() {
         return this.player;
     }
-    rotateY(angle){
+
+    rotateY(angle) {
         this.player.rotation.y = angle;
     }
-    setPosition(x,y,z){
-        this.player.position.set(x,y,z);
+
+    setPosition(x, y, z) {
+        this.player.position.set(x, y, z);
     }
-    getPosition(){
+
+    getPosition() {
         return this.player.position;
     }
 
-    getOnCell(){
+    getOnCell() {
         return this.position;
     }
 
-    setOnCell(value){
-        this.position=value;
+    setOnCell(value) {
+        this.position = value;
     }
 
-    lerpPosition(destination,alpha){
+    lerpPosition(destination, alpha) {
         this.player.position.lerp(destination, alpha);
     }
-    update(dt){
+
+    update(dt, island) {
         if (this.aniP !== null) this.aniP.update(dt);
+
+        if (this.player !== null && curState !== "WAITING" && curState !== "PREPARING") {
+
+        }
     }
 
 }
+
 export class Hearts {
     constructor() {
-        this.hearts=[];
-        this.heartLight=[];
+        this.hearts = [];
+        this.heartLight = [];
         this.generated = false;
 
 
         for (let i = 0; i < lives; i++) mi.importWithName("../models/heart.glb", "heart" + i);
     }
-    readyToGenerate(){
+
+    readyToGenerate() {
         return mi.everythingLoaded();
     }
-    generate(board){
+
+    generate(board) {
         if (!this.generated) {
-            this.generated=true;
+            this.generated = true;
             for (let i = 0; i < lives; i++) {
                 this.hearts.push(mi.getModel("heart" + i));
                 this.hearts[i].position.set(board.getCellPosition(8 + i)[0] + 1.25, 1.145, board.getCellPosition(8 + i)[2] - i * 0.7);
@@ -191,19 +211,22 @@ export class Hearts {
             }
         }
     }
-    getElements(){
-        let el=[];
+
+    getElements() {
+        let el = [];
         el.push(this.hearts);
         //el.push(this.heartLight);
         return el;
     }
-    moveLastHeartY(pos){
+
+    moveLastHeartY(pos) {
         this.hearts[lives].position.y += pos;
         this.heartLight[lives].position.y += pos;
-        this.heartLight[lives].power=0;
+        this.heartLight[lives].power = 0;
 
     }
-    getLastHeartY(){
+
+    getLastHeartY() {
         return this.hearts[lives].position.y;
     }
 }
