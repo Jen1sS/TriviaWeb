@@ -88,16 +88,20 @@ export class Player {
     update(dt, island) {
         if (this.aniP !== null) this.aniP.update(dt);
 
+
         if (this.player !== null && curState !== "WAITING" && curState !== "PREPARING") {
-            // Set the origin and direction of the ray
+            console.log(this.player.rotation.y)
+
+            this.player.position.y+=0.4; //offset cosi il player pare al suo posto
             this.raycaster.set(this.player.position, new THREE.Vector3(0, -1, 0));
+            this.player.position.y-=0.4;
 
             // Check for intersections with the island
-            const intersects = this.raycaster.intersectObject(island,true);
+            const intersects = this.raycaster.intersectObject(island);
 
-            // If the player is not touching the island, move the player up
             if (intersects.length === 0 || intersects[0].distance > 0.1) {
-                this.player.position.y -=1*dt;
+                console.log(intersects[0])
+                this.player.position.y = intersects[0].point.y + 0.1;
             }
         }
     }

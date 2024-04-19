@@ -186,8 +186,8 @@ function animate() {
                                 player.play("idle")
                                 transition = 0;
                                 curState = "CUTSECE_INITIAL";
-                            }, 10) //15000 val giusto
-                        }, 10) //3000 val giusto
+                            }, 15000) //15000 val giusto
+                        }, 3000) //3000 val giusto
                     }
                     break;
                 case "CUTSECE_INITIAL": //PRIMA CUTSENE
@@ -202,16 +202,12 @@ function animate() {
                             player.play("walk")
                         }
                         if (transition>0.106) transition=0.2;
-                        player.lerpPosition(new THREE.Vector3(20,2,-3.5),transition-0.1);
-                        //transition += 0.001 * dt;
-                        transition=0.2;
-                        player.setPosition(20,2,-2.5);
+                        player.lerpPosition(new THREE.Vector3(20,10,-3.5),transition-0.1);
+                        transition += 0.001 * dt;
                     } else if (start) {
                         start=!start;
                         player.play("idle");
                     }
-                    camera.lookAt(player.getPosition())
-
                     break;
             }
         } else {
