@@ -84,7 +84,6 @@ export class Player {
     lerpPosition(destination, alpha) {
         this.player.position.lerp(destination, alpha);
     }
-
     update(dt, island) {
         if (this.aniP !== null) this.aniP.update(dt);
 

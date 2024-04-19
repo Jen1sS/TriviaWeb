@@ -210,7 +210,6 @@ function animate() {
                     }
                     break;
             }
-        } else {
         }
     }
 }
