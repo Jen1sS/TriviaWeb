@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import {AnimationManager, ModelImporter} from './Classes/Importers.js';
 import {Board} from "./Classes/Board.js";
 import {Player} from "./Classes/Elements.js";
+import {Vector2} from "three";
 
 
 //Necessari per ThreeJs
@@ -34,13 +35,25 @@ const fallPos = new THREE.Vector3(24, 0.58, 4);
 //livello 1
 const l1Look = new THREE.Vector3(10,-3,-15);
 const l1Pos = new THREE.Vector3(22, 4, -1);
+const l1Points = [ // I TRE VECTOR SONO INIZIO,SECONDO PUNTO E FINE
+    [new Vector2(20.59,-2.38),new Vector2(19.2,-3.2),new Vector2(18.4,-1.8), Math.PI/4], //HOME 1
+    [new Vector2(18.4,-1.8),new Vector2(17.7,-2.6),new Vector2(18.3,-4.71), Math.PI/2], //HOME 2
+    [new Vector2(18.3,-4.71),new Vector2(19.19,-4.988),new Vector2(19.39,-5.789), Math.PI/2], //HOME 3
+    [new Vector2(19.39,-5.789),new Vector2(20.2,-6.29),new Vector2(21,-5.58), 0], //HOME 4
+    [new Vector2(21,-5.58),new Vector2(22,-5.1),new Vector2(22.19,-3.78), -Math.PI/2], //HOME 5
+    [new Vector2(22.19,-3.78),new Vector2(21.388,-2.09),new Vector2(16.488,-2.49),0], //NEXT LEVEL
+    [new Vector2(22.19,-3.78),new Vector2(21.388,-2.09),new Vector2(20.59,-2.38),0] //FAILED LEVEL
+
+]
+let curPos = 0;
 
 //MODELS
 let mi = new ModelImporter();
 //ADD
 let added = false;
 
-let finalAnimation;
+//LERP
+let beizerAlpha = -1;
 
 /*
  * Inizializza il motore e il gioco
@@ -82,7 +95,7 @@ async function initScene() {
     dl = new THREE.PointLight(0xfffbcc, 5000);
     dl.position.set(30, 40, 0);
     dl.castShadow = true;
-    const ShadowmapSize = 1024
+    const ShadowmapSize = 512
     dl.shadow.mapSize = new THREE.Vector2(ShadowmapSize, ShadowmapSize);
     dl.shadow.bias = -0.002;
     scene.add(dl);
@@ -186,8 +199,8 @@ function animate() {
                                 player.play("idle")
                                 transition = 0;
                                 curState = "CUTSECE_INITIAL";
-                            }, 15000) //15000 val giusto
-                        }, 3000) //3000 val giusto
+                            }, 1) //15000 val giusto
+                        }, 1) //3000 val giusto
                     }
                     break;
                 case "CUTSECE_INITIAL": //PRIMA CUTSENE
@@ -206,14 +219,47 @@ function animate() {
                         transition += 0.001 * dt;
                     } else if (start) {
                         start=!start;
+                        beizerAlpha=0;
+                        player.play("idle");
+                        curState = "LVL1"
+                    }
+                    break;
+                case "LVL1":
+                    if (beizerAlpha>=0 && beizerAlpha<1){
+                        player.play("walk")
+                        player.lerpWithBeizerCurve(l1Points[curPos][0],l1Points[curPos][1],l1Points[curPos][2],beizerAlpha,l1Points[curPos][3]);
+                        if (curPos === 5) beizerAlpha+=0.25*dt;
+                        else beizerAlpha+=0.5*dt;
+                    } else if (beizerAlpha>1){
+                        if (!timeout) {
+                            if (curPos !== 5) {
+                                setTimeout(() => {
+                                    if (curPos === 6) curPos = -1;
+                                    timeout = false;
+                                    beizerAlpha = 0;
+                                    if (curPos < 4) {
+                                        curPos++;
+                                    } else if (nextLevel) {
+                                        curPos = 5;
+                                    } else {
+                                        curPos = 6;
+                                    }
+                                }, 500)
+                                timeout = true;
+                            } else curState = "LVL2"
+                        }
                         player.play("idle");
                     }
+                    break;
+                case "LVL2":
+                    player.play("win")
                     break;
             }
         }
     }
 }
-
+let nextLevel = true
+let timeout = false;
 
 window.addEventListener('resize', onWindowResize, false)
 
@@ -224,11 +270,16 @@ function onWindowResize() {
 }
 
 document.addEventListener('keydown', function(event) {
-    console.log(player.getPosition())
+    console.log("----DEBUG----")
+    console.log("POSITION: (x)"+player.getPosition().x+" (y)"+player.getPosition().y+" (z)"+player.getPosition().z)
+    console.log("ROTATION (y): " + player.getRotation().y)
+    console.log("-------------")
     if (event.key === "s") player.getPosition().x+=0.1;
     if (event.key === "w") player.getPosition().x-=0.1;
     if (event.key === "a") player.getPosition().z+=0.1;
     if (event.key === "d") player.getPosition().z-=0.1;
+    if (event.key === "q") player.getRotation().y+=0.1;
+    if (event.key === "e") player.getRotation().y-=0.1;
 });
 
 window.onload = initScene;

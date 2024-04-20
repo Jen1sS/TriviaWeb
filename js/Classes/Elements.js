@@ -30,7 +30,7 @@ export class Player {
             this.generated = true;
             this.player = mi.getModel("player");
             this.player.position.set(24, 50, 4); //prendo posizione casella 0
-            this.player.scale.set(0.7, 0.7, 0.7);
+            this.player.scale.set(0.5, 0.5, 0.5);
             this.player.rotation.y += Math.PI / 2;
 
             mi.addShadows("player");
@@ -41,6 +41,8 @@ export class Player {
             this.aniP.import("../animations/impact.glb", "impact");
             this.aniP.import("../animations/standing.glb", "standing");
             this.aniP.import("../animations/walk.glb", "walk");
+            this.aniP.import("../animations/lost.glb", "lost");
+            this.aniP.import("../animations/win.glb", "win");
         }
     }
 
@@ -73,6 +75,10 @@ export class Player {
         return this.player.position;
     }
 
+    getRotation(){
+        return this.player.rotation;
+    }
+
     getOnCell() {
         return this.position;
     }
@@ -84,12 +90,17 @@ export class Player {
     lerpPosition(destination, alpha) {
         this.player.position.lerp(destination, alpha);
     }
+    lerpWithBeizerCurve(p1,p2,p3,alpha,offset){
+        const alphaC = 1 - alpha;
+        this.player.position.x = alphaC ** 2 * p1.x + 2 * alphaC * alpha * p2.x + alpha ** 2 * p3.x;
+        this.player.position.z = alphaC ** 2 * p1.y + 2 * alphaC * alpha * p2.y + alpha ** 2 * p3.y;
+        this.player.rotation.y = (1 - 2 * p1.x + 2 * p1.x * alpha + 2 * p2.x - 4 * p2.x * alpha + 2 * p3.x * alpha) - (offset * (alphaC));
+    }
     update(dt, island) {
         if (this.aniP !== null) this.aniP.update(dt);
 
 
         if (this.player !== null && curState !== "WAITING" && curState !== "PREPARING") {
-            console.log(this.player.rotation.y)
 
             this.player.position.y+=0.4; //offset cosi il player pare al suo posto
             this.raycaster.set(this.player.position, new THREE.Vector3(0, -1, 0));
@@ -99,7 +110,6 @@ export class Player {
             const intersects = this.raycaster.intersectObject(island);
 
             if (intersects.length === 0 || intersects[0].distance > 0.1) {
-                console.log(intersects[0])
                 this.player.position.y = intersects[0].point.y + 0.1;
             }
         }
