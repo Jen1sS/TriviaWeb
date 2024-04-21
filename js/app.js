@@ -25,12 +25,6 @@ let rolled = false;
 let active = false
 let id;
 
-//RADDRIZZAMENTO DADO
-let done = false;
-
-//DICE
-let dice
-
 //LERPING
 let timeA = 1;
 
@@ -43,6 +37,7 @@ let dt;
 
 //PLAYER
 let player;
+let streak = 0;
 
 
 
@@ -82,27 +77,27 @@ class Question {
 }
 
 //Da la domanda per il colore e chiede anche il numero di domande da recuperare nella fetch
-async function getQuestions(color, number) {
+async function getQuestions() {
     let res;
-    switch (color) {
-        case 0xd900ff: //VIOLA: Entertainment (Books, Films, Music, Musical & Theaters, Television, Board Games, Video Games
+    switch (randBetween(5,1)) {
+        case 1: //Entertainment (Books, Films, Music, Musical & Theaters, Television, Board Games, Video Games
             res = randBetween(16, 10) + "";
             break;
-        case 0x1e00ff: //BLU: General Knowledge
+        case 2: //General Knowledge
             res = "9";
             break;
-        case 0x00f2ff: //AZZURRO: Mithology
+        case 3: //Mithology
             res = "20";
             break;
-        case 0x00ff3c: // VERDE: Science & Nature, Computers, Math
+        case 4: //Science & Nature, Computers, Math
             res = randBetween(19, 17);
             break;
-        case 0xfbff00: // GIALLO: History, Politics, Art
+        case 5: //History, Politics, Art
             res = randBetween(25, 23);
             break;
     }
 
-    const response = await fetch("https://opentdb.com/api.php?amount=" + number + "&category=" + res);
+    const response = await fetch("https://opentdb.com/api.php?amount=1&category=" + res);
     const q = await response.json();
     quest = []
     for (let i = 0; i < q.results.length; i++) quest.push(new Question(q.results[i]));
@@ -111,23 +106,18 @@ async function getQuestions(color, number) {
 //Prende la prossima domanda e in caso non ci sia fa un fetch
 function next() {
     if (!started) {
-        getQuestions(c[player.getOnCell()], 1).then(r => loadQuestion());
+        getQuestions().then(r => loadQuestion());
         return;
     }
     if (quest.length > 0) loadQuestion();
-    else getQuestions(c[player.getOnCell()], 1).then(r => loadQuestion());
+    else getQuestions().then(r => loadQuestion());
 }
 
 
 //CHIEDI DOMANDA
 function ask() {
-    if (!asked) {
-        rolled = false;
-        active = false;
-        done = false;
-        setTimeout(next, 1000)
+        next();
         asked = true;
-    }
 }
 
 //Carica la domanda sulla pagina
@@ -174,8 +164,6 @@ function verify(num) {
     if (!end) {
         if (quest[quest.length - 1].getRightAnswer() === num) {
 
-            completed[c[player.getOnCell()]] = true;
-
             //update stats bar
             const tas = timer
             let point;
@@ -194,18 +182,22 @@ function verify(num) {
             points += point;
             clearTimeout(decrementTimer);
             document.getElementById("question").style.background = "radial-gradient(circle, rgba(149,255,166,1) 0%, rgba(0,255,72,1) 100%)";
-            color = c[player.getOnCell()];
-            setTimeout(hideT, 750)
+            setTimeout(hide, 750)
+            streak++;
         } else {
             lives--;
             document.getElementById("question").style.background = "radial-gradient(circle, rgba(255,149,149,1) 0%, rgba(255,0,0,1) 100%)"
             clearTimeout(decrementTimer);
-            setTimeout(hideF, 750)
+            setTimeout(hide, 750)
+            streak=0;
         }
         end = true;
+        answered = true;
         quest.pop();
     }
 }
+let answered = false;
+
 
 // Shuflle risposte alla domanda
 function shuffle(ans) {
@@ -237,21 +229,8 @@ function decrementTimer() {
 
 
 // Nascondono la domanda fatta dalla pagina
-function hideF() {
-    won=false;
-    hide(false)
-}
-
-function hideT() {
-    won=true;
-    hide(true)
-}
-
-function hide(guessed) {
+function hide() {
     document.getElementById("question").style.display = "none";
-
-    if (guessed) curState = "REVEAL"
-    else curState = "TRTDICE";
 }
 
 

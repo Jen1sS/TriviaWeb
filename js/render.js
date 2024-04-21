@@ -33,16 +33,16 @@ const portLook = new THREE.Vector3(23, 5, 4);
 const portPos = new THREE.Vector3(18, 8, 4);
 const fallPos = new THREE.Vector3(24, 0.58, 4);
 //livello 1
-const l1Look = new THREE.Vector3(10,-3,-15);
+const l1Look = new THREE.Vector3(10, -3, -15);
 const l1Pos = new THREE.Vector3(22, 4, -1);
 const l1Points = [ // I TRE VECTOR SONO INIZIO,SECONDO PUNTO E FINE
-    [new Vector2(20.59,-2.38),new Vector2(19.2,-3.2),new Vector2(18.4,-1.8), Math.PI/4], //HOME 1
-    [new Vector2(18.4,-1.8),new Vector2(17.7,-2.6),new Vector2(18.3,-4.71), Math.PI/2], //HOME 2
-    [new Vector2(18.3,-4.71),new Vector2(19.19,-4.988),new Vector2(19.39,-5.789), Math.PI/2], //HOME 3
-    [new Vector2(19.39,-5.789),new Vector2(20.2,-6.29),new Vector2(21,-5.58), 0], //HOME 4
-    [new Vector2(21,-5.58),new Vector2(22,-5.1),new Vector2(22.19,-3.78), -Math.PI/2], //HOME 5
-    [new Vector2(22.19,-3.78),new Vector2(21.388,-2.09),new Vector2(16.488,-2.49),0], //NEXT LEVEL
-    [new Vector2(22.19,-3.78),new Vector2(21.388,-2.09),new Vector2(20.59,-2.38),0] //FAILED LEVEL
+    [new Vector2(20.59, -2.38), new Vector2(19.2, -3.2), new Vector2(18.6, -1.8), -0.3145, -2.1145], //HOME 1
+    [new Vector2(18.4, -1.8), new Vector2(17.7, -2.6), new Vector2(18.3, -4.71), -2.2145, 1.1728], //HOME 2
+    [new Vector2(18.3, -4.71), new Vector2(19.19, -4.988), new Vector2(19.39, -5.789), -2.7145, 1.972], //HOME 3
+    [new Vector2(19.39, -5.789), new Vector2(20.2, -6.29), new Vector2(21, -5.58), -3.7145, -0.0900], //HOME 4
+    [new Vector2(21, -5.58), new Vector2(22, -5.1), new Vector2(22.19, -3.78), -4.5145, -1.21], //HOME 5
+    [new Vector2(22.19, -3.78), new Vector2(21.388, -2.09), new Vector2(16.488, -2.49), -1.4145, -1.4145], //NEXT LEVEL
+    [new Vector2(22.19, -3.78), new Vector2(21.388, -2.09), new Vector2(20.59, -2.38), -2.1145, -2.1145] //FAILED LEVEL
 
 ]
 let curPos = 0;
@@ -92,7 +92,7 @@ async function initScene() {
     player = new Player();
     //#endregion
     //#region CREAZIONE LUCE DEL TABELLONE
-    dl = new THREE.PointLight(0xfffbcc, 5000);
+    dl = new THREE.PointLight(0xffffcc, 10000);
     dl.position.set(30, 40, 0);
     dl.castShadow = true;
     const ShadowmapSize = 512
@@ -134,7 +134,7 @@ function animate() {
     if (mi.everythingLoaded()) {
         if (lives !== 0) {
             //AUTOMA A STATI FINITI
-            if (addedW){
+            if (addedW) {
                 sky.rotation.y += 0.05 * dt;
             }
             switch (curState) {
@@ -158,7 +158,6 @@ function animate() {
                         island = world.getWorld();
                         sky = world.getSkybox();
                     }
-
 
 
                     if (addedP && addedW) {
@@ -206,49 +205,61 @@ function animate() {
                 case "CUTSECE_INITIAL": //PRIMA CUTSENE
                     if (transition < 0.1) {
                         camera.position.lerp(l1Pos, transition);
-                        lerpCameraVision(curLook,l1Look,transition)
+                        lerpCameraVision(curLook, l1Look, transition)
                         transition += 0.1 * dt;
-                    } else if (transition < 0.2){
+                    } else if (transition < 0.2) {
                         if (!start) {
-                            start=true;
+                            start = true;
                             player.rotateY(3.8);
                             player.play("walk")
                         }
-                        if (transition>0.106) transition=0.2;
-                        player.lerpPosition(new THREE.Vector3(20,10,-3.5),transition-0.1);
+                        if (transition > 0.106) transition = 0.2;
+                        player.lerpPosition(new THREE.Vector3(20, 10, -3.5), transition - 0.1);
                         transition += 0.001 * dt;
                     } else if (start) {
-                        start=!start;
-                        beizerAlpha=0;
+                        start = !start;
+                        beizerAlpha = 0;
                         player.play("idle");
                         curState = "LVL1"
                     }
                     break;
                 case "LVL1":
-                    if (beizerAlpha>=0 && beizerAlpha<1){
-                        player.play("walk")
-                        player.lerpWithBeizerCurve(l1Points[curPos][0],l1Points[curPos][1],l1Points[curPos][2],beizerAlpha,l1Points[curPos][3]);
-                        if (curPos === 5) beizerAlpha+=0.25*dt;
-                        else beizerAlpha+=0.5*dt;
-                    } else if (beizerAlpha>1){
-                        if (!timeout) {
-                            if (curPos !== 5) {
-                                setTimeout(() => {
-                                    if (curPos === 6) curPos = -1;
-                                    timeout = false;
-                                    beizerAlpha = 0;
-                                    if (curPos < 4) {
-                                        curPos++;
-                                    } else if (nextLevel) {
-                                        curPos = 5;
-                                    } else {
-                                        curPos = 6;
-                                    }
-                                }, 500)
-                                timeout = true;
-                            } else curState = "LVL2"
+                    if (beizerAlpha >= 1 && beizerAlpha < 2 && answered) { //Caso in cui ruota su se stesso per andare alla prossima casa
+                        if (curPos === 6 || curPos === 5) beizerAlpha = 2.1; //Non lo fa se deve tornare all'inizio o va al prossimo livello
+                        else { //Giro
+                            player.play("rT")
+                            player.lerpAngleY(l1Points[curPos][4], ((beizerAlpha - 1)) / 10);
+                            beizerAlpha += 0.5 * dt;
                         }
-                        player.play("idle");
+                    } else if (beizerAlpha >= 0 && beizerAlpha < 1) { //Deve camminare alla prossima casa
+                        player.play("walk")
+                        player.lerpWithBeizerCurve(l1Points[curPos][0], l1Points[curPos][1], l1Points[curPos][2], beizerAlpha);
+                        player.lerpAngleY(l1Points[curPos][3], beizerAlpha / 10);
+                        if (curPos === 5) beizerAlpha += 0.25 * dt; //Se sta andando al ponte ci va più lentamente
+                        else beizerAlpha += 0.5 * dt;
+                    } else if (beizerAlpha > 2 && !timeout) { //cosi chiede solo una volta
+
+                        if (curPos < 5) { //Quando sta navigando per le case
+                            timeout = true;
+                            setTimeout(() => {
+                                //reset delle variabili per la prossima iterazione
+                                resetLVL1()
+
+                                if (curPos < 4) curPos++; //prossima casa
+                                else if (streak >= 5) curPos = 5; //prossimo livello
+                                else curPos = 6; //ritorno a casa 1
+
+                            }, 500)
+                        } else if (curPos === 6) { //Ritorno alla prima casa senza timeout
+                            curPos = 0;
+                            resetLVL1()
+                        } else curState = "LVL2" //Prossimo livello
+                    } else if (!asked) { //Se deve ancora chiedere chiede la domanda
+                        if (curPos < 5) {
+                            ask();
+                            asked = true;
+                            player.play("idle");
+                        } else answered = true;
                     }
                     break;
                 case "LVL2":
@@ -258,8 +269,16 @@ function animate() {
         }
     }
 }
-let nextLevel = true
+
 let timeout = false;
+let asked = false;
+
+function resetLVL1(){
+    timeout = false;
+    answered = false;
+    asked = false;
+    beizerAlpha = 0;
+}
 
 window.addEventListener('resize', onWindowResize, false)
 
@@ -269,17 +288,17 @@ function onWindowResize() {
     renderer.setSize(window.innerWidth, window.innerHeight)
 }
 
-document.addEventListener('keydown', function(event) {
+document.addEventListener('keydown', function (event) {
     console.log("----DEBUG----")
-    console.log("POSITION: (x)"+player.getPosition().x+" (y)"+player.getPosition().y+" (z)"+player.getPosition().z)
+    console.log("POSITION: (x)" + player.getPosition().x + " (y)" + player.getPosition().y + " (z)" + player.getPosition().z)
     console.log("ROTATION (y): " + player.getRotation().y)
     console.log("-------------")
-    if (event.key === "s") player.getPosition().x+=0.1;
-    if (event.key === "w") player.getPosition().x-=0.1;
-    if (event.key === "a") player.getPosition().z+=0.1;
-    if (event.key === "d") player.getPosition().z-=0.1;
-    if (event.key === "q") player.getRotation().y+=0.1;
-    if (event.key === "e") player.getRotation().y-=0.1;
+    if (event.key === "s") player.getPosition().x += 0.1;
+    if (event.key === "w") player.getPosition().x -= 0.1;
+    if (event.key === "a") player.getPosition().z += 0.1;
+    if (event.key === "d") player.getPosition().z -= 0.1;
+    if (event.key === "q") player.getRotation().y += 0.1;
+    if (event.key === "e") player.getRotation().y -= 0.1;
 });
 
 window.onload = initScene;

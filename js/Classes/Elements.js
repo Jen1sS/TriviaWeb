@@ -43,6 +43,7 @@ export class Player {
             this.aniP.import("../animations/walk.glb", "walk");
             this.aniP.import("../animations/lost.glb", "lost");
             this.aniP.import("../animations/win.glb", "win");
+            this.aniP.import("../animations/rightTurn.glb", "rT");
         }
     }
 
@@ -90,11 +91,15 @@ export class Player {
     lerpPosition(destination, alpha) {
         this.player.position.lerp(destination, alpha);
     }
-    lerpWithBeizerCurve(p1,p2,p3,alpha,offset){
+    lerpWithBeizerCurve(p1,p2,p3,alpha){
         const alphaC = 1 - alpha;
         this.player.position.x = alphaC ** 2 * p1.x + 2 * alphaC * alpha * p2.x + alpha ** 2 * p3.x;
         this.player.position.z = alphaC ** 2 * p1.y + 2 * alphaC * alpha * p2.y + alpha ** 2 * p3.y;
-        this.player.rotation.y = (1 - 2 * p1.x + 2 * p1.x * alpha + 2 * p2.x - 4 * p2.x * alpha + 2 * p3.x * alpha) - (offset * (alphaC));
+        //this.player.rotation.y = (1 - 2 * p1.x + 2 * p1.x * alpha + 2 * p2.x - 4 * p2.x * alpha + 2 * p3.x * alpha);
+    }
+    lerpAngleY(v2,alpha){
+        let targetQuaternion = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), v2);
+        this.player.quaternion.slerp(targetQuaternion, alpha);
     }
     update(dt, island) {
         if (this.aniP !== null) this.aniP.update(dt);
