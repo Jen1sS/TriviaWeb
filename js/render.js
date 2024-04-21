@@ -1,8 +1,8 @@
 import * as THREE from 'three';
-import {AnimationManager, ModelImporter} from './Classes/Importers.js';
+import {Vector2, Vector3} from 'three';
+import {ModelImporter} from './Classes/Importers.js';
 import {Board} from "./Classes/Board.js";
 import {Player} from "./Classes/Elements.js";
-import {Vector2} from "three";
 
 
 //Necessari per ThreeJs
@@ -11,6 +11,8 @@ let renderer = null; // Il motore di render
 let camera = null;
 let scene = null;    // la scena radice
 let clock = null;    // Oggetto per la gestione del timinig della scena
+
+const defFov = 70;
 
 
 //LUCE
@@ -32,7 +34,7 @@ let curLook = new THREE.Vector3(0, 5, 0);
 const portLook = new THREE.Vector3(23, 5, 4);
 const portPos = new THREE.Vector3(18, 8, 4);
 const fallPos = new THREE.Vector3(24, 0.58, 4);
-//livello 1
+//#region livello 1
 const l1Look = new THREE.Vector3(10, -3, -15);
 const l1Pos = new THREE.Vector3(22, 4, -1);
 const l1Points = [ // I TRE VECTOR SONO INIZIO,SECONDO PUNTO E FINE
@@ -46,6 +48,10 @@ const l1Points = [ // I TRE VECTOR SONO INIZIO,SECONDO PUNTO E FINE
 
 ]
 let curPos = 0;
+//endregion
+
+//#region livello 2
+const l2Pos = new Vector3(5,10,-10);
 
 //MODELS
 let mi = new ModelImporter();
@@ -79,7 +85,7 @@ async function initScene() {
     document.getElementById("map").appendChild(renderer.domElement);
     //#endregion
     //#region SETUP CAMERA
-    camera = new THREE.PerspectiveCamera(70, width / height, 0.1, 500);
+    camera = new THREE.PerspectiveCamera(defFov, width / height, 0.1, 500);
     camera.position.set(40, 30, 40);
     camera.lookAt(0, 5, 0)
     clock = new THREE.Clock();
@@ -221,6 +227,7 @@ function animate() {
                         beizerAlpha = 0;
                         player.play("idle");
                         curState = "LVL1"
+
                     }
                     break;
                 case "LVL1":
@@ -256,7 +263,10 @@ function animate() {
                         } else if (curPos === 6) { //Ritorno alla prima casa senza timeout
                             curPos = 0;
                             resetLVL1()
-                        } else curState = "LVL2" //Prossimo livello
+                        } else{
+                            curState = "LVL2"
+                            transition = 0;
+                        } //Prossimo livello
                     } else if (!asked) { //Se deve ancora chiedere chiede la domanda
                         if (curPos < 5) {
                             ask(1);
@@ -267,6 +277,11 @@ function animate() {
                     break;
                 case "LVL2":
                     player.play("idleW")
+                    if (transition<0.1){
+                        camera.position.lerp(l2Pos,transition)
+                        lerpCameraVision(l1Look,player.getPosition(),transition);
+                        transition+=0.1*dt
+                    }
                     break;
             }
         }
