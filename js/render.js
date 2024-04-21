@@ -232,7 +232,10 @@ function animate() {
                             beizerAlpha += 0.5 * dt;
                         }
                     } else if (beizerAlpha >= 0 && beizerAlpha < 1) { //Deve camminare alla prossima casa
-                        player.play("walk")
+                        if (curPos===5) player.play("walkW");
+                        else if (curPos===6) player.play("walkL");
+                        else player.play("walk")
+
                         player.lerpWithBeizerCurve(l1Points[curPos][0], l1Points[curPos][1], l1Points[curPos][2], beizerAlpha);
                         player.lerpAngleY(l1Points[curPos][3], beizerAlpha / 10);
                         if (curPos === 5) beizerAlpha += 0.25 * dt; //Se sta andando al ponte ci va più lentamente
@@ -256,14 +259,14 @@ function animate() {
                         } else curState = "LVL2" //Prossimo livello
                     } else if (!asked) { //Se deve ancora chiedere chiede la domanda
                         if (curPos < 5) {
-                            ask();
+                            ask(1);
                             asked = true;
                             player.play("idle");
                         } else answered = true;
                     }
                     break;
                 case "LVL2":
-                    player.play("win")
+                    player.play("idleW")
                     break;
             }
         }

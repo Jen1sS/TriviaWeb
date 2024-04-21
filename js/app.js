@@ -77,8 +77,10 @@ class Question {
 }
 
 //Da la domanda per il colore e chiede anche il numero di domande da recuperare nella fetch
-async function getQuestions() {
+async function getQuestions(level) {
     let res;
+    let dif;
+
     switch (randBetween(5,1)) {
         case 1: //Entertainment (Books, Films, Music, Musical & Theaters, Television, Board Games, Video Games
             res = randBetween(16, 10) + "";
@@ -97,26 +99,38 @@ async function getQuestions() {
             break;
     }
 
-    const response = await fetch("https://opentdb.com/api.php?amount=1&category=" + res);
+    switch (level){
+        case 1:
+            dif = "easy"
+            break;
+        case 2:
+            dif = "medium"
+            break;
+        case 3:
+            dif = "hard"
+            break;
+    }
+
+    const response = await fetch("https://opentdb.com/api.php?amount=1&category=" + res +"&difficulty=" + dif);
     const q = await response.json();
     quest = []
     for (let i = 0; i < q.results.length; i++) quest.push(new Question(q.results[i]));
 }
 
 //Prende la prossima domanda e in caso non ci sia fa un fetch
-function next() {
+function next(level) {
     if (!started) {
-        getQuestions().then(r => loadQuestion());
+        getQuestions(level).then(r => loadQuestion());
         return;
     }
     if (quest.length > 0) loadQuestion();
-    else getQuestions().then(r => loadQuestion());
+    else getQuestions(level).then(r => loadQuestion());
 }
 
 
 //CHIEDI DOMANDA
-function ask() {
-        next();
+function ask(level) {
+        next(level);
         asked = true;
 }
 

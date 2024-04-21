@@ -44,6 +44,9 @@ export class Player {
             this.aniP.import("../animations/lost.glb", "lost");
             this.aniP.import("../animations/win.glb", "win");
             this.aniP.import("../animations/rightTurn.glb", "rT");
+            this.aniP.import("../animations/walkW.glb", "walkW");
+            this.aniP.import("../animations/walkL.glb", "walkL");
+            this.aniP.import("../animations/idleW.glb", "idleW");
         }
     }
 
