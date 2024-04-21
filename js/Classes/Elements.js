@@ -1,5 +1,4 @@
 import {AnimationManager, ModelImporter} from "./Importers.js";
-import {Vector3} from "three";
 import * as THREE from "three";
 
 const mi = new ModelImporter();
@@ -79,7 +78,7 @@ export class Player {
         return this.player.position;
     }
 
-    getRotation(){
+    getRotation() {
         return this.player.rotation;
     }
 
@@ -94,33 +93,43 @@ export class Player {
     lerpPosition(destination, alpha) {
         this.player.position.lerp(destination, alpha);
     }
-    lerpWithBeizerCurve(p1,p2,p3,alpha){
-        const alphaC = 1 - alpha;
-        this.player.position.x = alphaC ** 2 * p1.x + 2 * alphaC * alpha * p2.x + alpha ** 2 * p3.x;
-        this.player.position.z = alphaC ** 2 * p1.y + 2 * alphaC * alpha * p2.y + alpha ** 2 * p3.y;
-        //this.player.rotation.y = (1 - 2 * p1.x + 2 * p1.x * alpha + 2 * p2.x - 4 * p2.x * alpha + 2 * p3.x * alpha);
+
+    lerpWithBeizerCurve(p1, p2, p3, alpha) {
+        this.player.position.x = beizerFormula(p1.x,p2.x,p3.x,alpha);
+        this.player.position.z = beizerFormula(p1.y,p2.y,p3.y,alpha);
+
+        this.player.lookAt(
+            beizerFormula(p1.x,p2.x,p3.x,alpha + 0.1*dt),
+            this.player.position.y,
+            beizerFormula(p1.y,p2.y,p3.y,alpha + 0.1*dt)
+        )
     }
-    lerpAngleY(v2,alpha){
+
+    lerpAngleY(v2, alpha) {
         let targetQuaternion = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), v2);
         this.player.quaternion.slerp(targetQuaternion, alpha);
     }
+
     update(dt, island) {
         if (this.aniP !== null) this.aniP.update(dt);
 
 
         if (this.player !== null && curState !== "WAITING" && curState !== "PREPARING") {
 
-            this.player.position.y+=0.4; //offset cosi il player pare al suo posto
+            this.player.position.y += 0.4; //offset cosi il player pare al suo posto
             this.raycaster.set(this.player.position, new THREE.Vector3(0, -1, 0));
-            this.player.position.y-=0.4;
+            this.player.position.y -= 0.4;
 
             // Check for intersections with the island
             const intersects = this.raycaster.intersectObject(island);
-
             if (intersects.length === 0 || intersects[0].distance > 0.1) {
-                this.player.position.y = intersects[0].point.y + 0.1;
+                if (intersects.length>0) this.player.position.y = intersects[0].point.y + 0.1;
             }
         }
     }
+}
 
+function beizerFormula(p1,p2,p3,alpha){
+    const alphaC = 1 - alpha;
+    return alphaC ** 2 * p1 + 2 * alphaC * alpha * p2 + alpha ** 2 * p3;
 }

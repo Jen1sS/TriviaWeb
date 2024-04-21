@@ -36,13 +36,13 @@ const fallPos = new THREE.Vector3(24, 0.58, 4);
 const l1Look = new THREE.Vector3(10, -3, -15);
 const l1Pos = new THREE.Vector3(22, 4, -1);
 const l1Points = [ // I TRE VECTOR SONO INIZIO,SECONDO PUNTO E FINE
-    [new Vector2(20.59, -2.38), new Vector2(19.2, -3.2), new Vector2(18.6, -1.8), -0.3145, -2.1145], //HOME 1
-    [new Vector2(18.4, -1.8), new Vector2(17.7, -2.6), new Vector2(18.3, -4.71), -2.2145, 1.1728], //HOME 2
-    [new Vector2(18.3, -4.71), new Vector2(19.19, -4.988), new Vector2(19.39, -5.789), -2.7145, 1.972], //HOME 3
-    [new Vector2(19.39, -5.789), new Vector2(20.2, -6.29), new Vector2(21, -5.58), -3.7145, -0.0900], //HOME 4
-    [new Vector2(21, -5.58), new Vector2(22, -5.1), new Vector2(22.19, -3.78), -4.5145, -1.21], //HOME 5
-    [new Vector2(22.19, -3.78), new Vector2(21.388, -2.09), new Vector2(16.488, -2.49), -1.4145, -1.4145], //NEXT LEVEL
-    [new Vector2(22.19, -3.78), new Vector2(21.388, -2.09), new Vector2(20.59, -2.38), -2.1145, -2.1145] //FAILED LEVEL
+    [new Vector2(20.59, -2.38), new Vector2(19.2, -3.2), new Vector2(18.6, -1.8), -0.3145], //HOME 1
+    [new Vector2(18.4, -1.8), new Vector2(17.7, -2.6), new Vector2(18.3, -4.71), -2.2145], //HOME 2
+    [new Vector2(18.3, -4.71), new Vector2(19.19, -4.988), new Vector2(19.39, -5.789), -2.7145], //HOME 3
+    [new Vector2(19.39, -5.789), new Vector2(20.2, -6.29), new Vector2(21, -5.58), -3.7145], //HOME 4
+    [new Vector2(21, -5.58), new Vector2(22, -5.1), new Vector2(22.19, -3.78), -4.5145], //HOME 5
+    [new Vector2(22.19, -3.78), new Vector2(21.388, -2.09), new Vector2(16.488, -2.49), -1.4145], //NEXT LEVEL
+    [new Vector2(22.19, -3.78), new Vector2(21.388, -2.09), new Vector2(20.59, -2.38), -2.1145] //FAILED LEVEL
 
 ]
 let curPos = 0;
@@ -224,11 +224,11 @@ function animate() {
                     }
                     break;
                 case "LVL1":
-                    if (beizerAlpha >= 1 && beizerAlpha < 2 && answered) { //Caso in cui ruota su se stesso per andare alla prossima casa
+                    if (beizerAlpha >= 1 && beizerAlpha < 2) { //Caso in cui ruota su se stesso per andare alla prossima casa
                         if (curPos === 6 || curPos === 5) beizerAlpha = 2.1; //Non lo fa se deve tornare all'inizio o va al prossimo livello
                         else { //Giro
                             player.play("rT")
-                            player.lerpAngleY(l1Points[curPos][4], ((beizerAlpha - 1)) / 10);
+                            player.lerpAngleY(l1Points[curPos][3], ((beizerAlpha - 1)) / 10);
                             beizerAlpha += 0.5 * dt;
                         }
                     } else if (beizerAlpha >= 0 && beizerAlpha < 1) { //Deve camminare alla prossima casa
@@ -237,10 +237,10 @@ function animate() {
                         else player.play("walk")
 
                         player.lerpWithBeizerCurve(l1Points[curPos][0], l1Points[curPos][1], l1Points[curPos][2], beizerAlpha);
-                        player.lerpAngleY(l1Points[curPos][3], beizerAlpha / 10);
+                        //player.lerpAngleY(l1Points[curPos][3], beizerAlpha / 10);
                         if (curPos === 5) beizerAlpha += 0.25 * dt; //Se sta andando al ponte ci va più lentamente
                         else beizerAlpha += 0.5 * dt;
-                    } else if (beizerAlpha > 2 && !timeout) { //cosi chiede solo una volta
+                    } else if (beizerAlpha > 2 && !timeout && answered) { //cosi chiede solo una volta
 
                         if (curPos < 5) { //Quando sta navigando per le case
                             timeout = true;
