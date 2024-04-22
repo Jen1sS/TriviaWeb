@@ -8,6 +8,7 @@ export class Player {
         this.player = null;
         this.aniP = null;
         this.generated = false;
+        this.energy = 0.7; // def 0.7
         this.position = 0; //seleziona la pos iniziale
         this.raycaster = new THREE.Raycaster();
 
@@ -94,15 +95,23 @@ export class Player {
         this.player.position.lerp(destination, alpha);
     }
 
-    lerpWithBeizerCurve(p1, p2, p3, alpha) {
-        this.player.position.x = beizerFormula(p1.x,p2.x,p3.x,alpha);
-        this.player.position.z = beizerFormula(p1.y,p2.y,p3.y,alpha);
+    lerpWithBeizerCurve(p1, p2, p3, alpha, reverse) {
+        this.player.position.x = beizerFormula(p1.x, p2.x, p3.x, alpha);
+        this.player.position.z = beizerFormula(p1.y, p2.y, p3.y, alpha);
 
         this.player.lookAt(
-            beizerFormula(p1.x,p2.x,p3.x,alpha + 0.1*dt),
+            beizerFormula(p1.x, p2.x, p3.x, alpha + 0.1 * dt),
             this.player.position.y,
-            beizerFormula(p1.y,p2.y,p3.y,alpha + 0.1*dt)
+            beizerFormula(p1.y, p2.y, p3.y, alpha + 0.1 * dt)
         )
+
+        if (reverse !== undefined) if (reverse) {
+            this.player.lookAt(
+                beizerFormula(p1.x, p2.x, p3.x, alpha - 0.1 * dt),
+                this.player.position.y,
+                beizerFormula(p1.y, p2.y, p3.y, alpha - 0.1 * dt)
+            )
+        }
     }
 
     lerpAngleY(v2, alpha) {
@@ -110,9 +119,23 @@ export class Player {
         this.player.quaternion.slerp(targetQuaternion, alpha);
     }
 
-    update(dt, island) {
-        if (this.aniP !== null) this.aniP.update(dt);
+    getEnergy() {
+        return this.energy;
+    }
 
+    decreaseEnergy(decrease) {
+        this.energy -= decrease;
+    }
+
+    setEnergy(value) {
+        this.energy = value;
+    }
+
+    update(dt, island) {
+        if (this.aniP !== null) {
+            this.aniP.update(dt);
+            if (curState === "LVL2") this.aniP.setPlaybackSpeed(Math.abs(this.energy*1.5))
+        }
 
         if (this.player !== null && curState !== "WAITING" && curState !== "PREPARING") {
 
@@ -123,13 +146,13 @@ export class Player {
             // Check for intersections with the island
             const intersects = this.raycaster.intersectObject(island);
             if (intersects.length === 0 || intersects[0].distance > 0.0001) {
-                if (intersects.length>0) this.player.position.y = intersects[0].point.y + 0.0001;
+                if (intersects.length > 0) this.player.position.y = intersects[0].point.y + 0.0001;
             }
         }
     }
 }
 
-function beizerFormula(p1,p2,p3,alpha){
+function beizerFormula(p1, p2, p3, alpha) {
     const alphaC = 1 - alpha;
     return alphaC ** 2 * p1 + 2 * alphaC * alpha * p2 + alpha ** 2 * p3;
 }

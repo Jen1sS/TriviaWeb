@@ -170,4 +170,8 @@ export class AnimationManager {
 
         this.playing = true;
     }
+
+    setPlaybackSpeed(value){
+        if (this.activeAction!==null) this.activeAction.timeScale = value;
+    }
 }

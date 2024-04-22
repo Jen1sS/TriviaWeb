@@ -4,6 +4,7 @@ let end;
 let points = 0;
 let timer;
 let asked = false;
+let guessed = false;
 
 let started = false;
 
@@ -197,12 +198,14 @@ function verify(num) {
             clearTimeout(decrementTimer);
             document.getElementById("question").style.background = "radial-gradient(circle, rgba(149,255,166,1) 0%, rgba(0,255,72,1) 100%)";
             setTimeout(hide, 750)
+            guessed = true;
             streak++;
         } else {
             lives--;
             document.getElementById("question").style.background = "radial-gradient(circle, rgba(255,149,149,1) 0%, rgba(255,0,0,1) 100%)"
             clearTimeout(decrementTimer);
             setTimeout(hide, 750)
+            guessed = false;
             streak=0;
         }
         end = true;
@@ -262,34 +265,6 @@ function erp(v1, v2, alpha) { // 5 is temp
     return Math.exp(-5 * alpha) * (v1 - v2) + v2;
 }
 
-
-//ROLL DADO
-function roll() {
-    if (!rolled) {
-        if (!active) {
-            id = setInterval(decrement, 1000);
-            positions = randBetween(6, 1);
-            active = !active;
-        }
-
-        if (time === 0) {
-            time = randBetween(5, 1);
-            clearTimeout(id);
-            rolled = true;
-            active = false;
-            dice.initializeStraighten(positions);
-        } else {
-            dice.roll(75);
-        }
-    } else if (rolled && !done) done = dice.straighten(dt);
-    else {
-        //TODO: CAMERA TORNA A POS ORIGINALE
-        oldPos = positions;
-        curState = "MOVING";
-        timeA = 1;
-    }
-
-}
 
 //INIZIO GIOCO
 function startGame() {
