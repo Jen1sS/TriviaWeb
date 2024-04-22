@@ -47,11 +47,14 @@ const l1Points = [ // I TRE VECTOR SONO INIZIO,SECONDO PUNTO E FINE
     [new Vector2(22.19, -3.78), new Vector2(21.388, -2.09), new Vector2(20.59, -2.38), -2.1145] //FAILED LEVEL
 
 ]
-let curPos = 0;
+let curPos = 5;
 //endregion
 
 //#region livello 2
-const l2Pos = new Vector3(5,10,-10);
+const l2Pos = new Vector3(5, 10, -10);
+const l2AfterBridge = new Vector3(11.4039,5, -2.688);
+const l2Tol3 = [new Vector2(11.4039, -2.688), new Vector2(10.097,-1.989),new Vector2(8.597,-11.889)];
+//#endregion
 
 //MODELS
 let mi = new ModelImporter();
@@ -203,12 +206,12 @@ function animate() {
                             setTimeout(() => {
                                 player.play("idle")
                                 transition = 0;
-                                curState = "CUTSECE_INITIAL";
+                                curState = "CUTSCENE_INITIAL";
                             }, 1) //15000 val giusto
                         }, 1) //3000 val giusto
                     }
                     break;
-                case "CUTSECE_INITIAL": //PRIMA CUTSENE
+                case "CUTSCENE_INITIAL": //PRIMA CUTSENE
                     if (transition < 0.1) {
                         camera.position.lerp(l1Pos, transition);
                         lerpCameraVision(curLook, l1Look, transition)
@@ -239,12 +242,11 @@ function animate() {
                             beizerAlpha += 0.5 * dt;
                         }
                     } else if (beizerAlpha >= 0 && beizerAlpha < 1) { //Deve camminare alla prossima casa
-                        if (curPos===5) player.play("walkW");
-                        else if (curPos===6) player.play("walkL");
+                        if (curPos === 5) player.play("walkW");
+                        else if (curPos === 6) player.play("walkL");
                         else player.play("walk")
 
                         player.lerpWithBeizerCurve(l1Points[curPos][0], l1Points[curPos][1], l1Points[curPos][2], beizerAlpha);
-                        //player.lerpAngleY(l1Points[curPos][3], beizerAlpha / 10);
                         if (curPos === 5) beizerAlpha += 0.25 * dt; //Se sta andando al ponte ci va più lentamente
                         else beizerAlpha += 0.5 * dt;
                     } else if (beizerAlpha > 2 && !timeout && answered) { //cosi chiede solo una volta
@@ -263,7 +265,7 @@ function animate() {
                         } else if (curPos === 6) { //Ritorno alla prima casa senza timeout
                             curPos = 0;
                             resetLVL1()
-                        } else{
+                        } else {
                             curState = "LVL2"
                             transition = 0;
                         } //Prossimo livello
@@ -276,12 +278,24 @@ function animate() {
                     }
                     break;
                 case "LVL2":
-                    player.play("idleW")
-                    if (transition<0.1){
-                        camera.position.lerp(l2Pos,transition)
-                        lerpCameraVision(l1Look,player.getPosition(),transition);
-                        transition+=0.1*dt
+                    if (transition < 0.1) {
+                        player.play("idleW")
+                        camera.position.lerp(l2Pos, transition)
+                        lerpCameraVision(l1Look, player.getPosition(), transition);
+                        transition += 0.1 * dt
+                    } else if (transition < 0.107) {
+                        console.log(transition)
+                        player.lerpPosition(l2AfterBridge, transition - 0.1);
+                        transition += 0.001 * dt;
+                    } else if (transition < 1.107) {
+                        player.lerpWithBeizerCurve(l2Tol3[0], l2Tol3[1], l2Tol3[2], transition - 0.107);
+                        transition += 0.1 * dt;
                     }
+                    if (transition > 0.1){
+                        camera.lookAt(player.getPosition());
+                        player.play("walk");
+                    }
+
                     break;
             }
         }
@@ -291,7 +305,7 @@ function animate() {
 let timeout = false;
 let asked = false;
 
-function resetLVL1(){
+function resetLVL1() {
     timeout = false;
     answered = false;
     asked = false;

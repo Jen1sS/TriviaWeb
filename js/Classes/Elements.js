@@ -122,8 +122,8 @@ export class Player {
 
             // Check for intersections with the island
             const intersects = this.raycaster.intersectObject(island);
-            if (intersects.length === 0 || intersects[0].distance > 0.1) {
-                if (intersects.length>0) this.player.position.y = intersects[0].point.y + 0.1;
+            if (intersects.length === 0 || intersects[0].distance > 0.0001) {
+                if (intersects.length>0) this.player.position.y = intersects[0].point.y + 0.0001;
             }
         }
     }
