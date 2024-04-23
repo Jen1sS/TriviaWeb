@@ -12,7 +12,7 @@ let camera = null;
 let scene = null;    // la scena radice
 let clock = null;    // Oggetto per la gestione del timinig della scena
 
-const defFov = 70;
+let defFov = 70;
 
 
 //LUCE
@@ -59,7 +59,28 @@ const l2p2Pos = new Vector3(3, 10, -18);
 //#endregion
 
 //#region livello 3
-const l3toCity = [[new Vector2(3.397, -9.083),new Vector2(3.6976,8.0394),new Vector2(-2.9023,1.1399)],[new Vector2(-2.9023,1.1399),new Vector2(-3.89,-5.24),new Vector2(-8.39,-8.24)]];
+const l3toCity = [
+    [new Vector2(3.397, -9.083), new Vector2(3.6976, 8.0394), new Vector2(-2.9023, 1.1399)], //BRIDGE TO CITY
+    [new Vector2(-2.9023, 1.1399), new Vector2(-3.89, -5.24), new Vector2(-8.39, -8.24)] //TOWER TO CITY
+];
+const l3Points = [
+    [new Vector2(-8.39, -8.24), new Vector2(-3.98, -7.83), new Vector2(-3.98, -7.83), 0.82], //CASA 1
+    [new Vector2(-3.98, -7.83), new Vector2(-4.88, -8.73), new Vector2(-4.88, -8.73), 2.48], //CASA 2
+    [new Vector2(-4.88, -8.73), new Vector2(-5.98, -9.83), new Vector2(-5.98, -9.83), -3.41], // CASA 3
+    [new Vector2(-5.98, -9.83), new Vector2(-7.78, -10.03), new Vector2(-7.78, -10.03), 3.16], //CASA 4
+    [new Vector2(-7.78, -10.03), new Vector2(-6.28, -10.53), new Vector2(-5.58, -12.13), 2.82], //CASA 5 DIETRO CAMERA
+    [new Vector2(-5.58, -12.13), new Vector2(-4.68, -11.13), new Vector2(-3.58, -10.73), 2.77], //CASA 5
+    [new Vector2(-3.58, -10.73), new Vector2(-3.08, -9.83), new Vector2(-2.58, -9.83), 2.25], //CASA 6
+    [new Vector2(-2.58, -9.83), new Vector2(-2.48, -8.53), new Vector2(-1.58, -8.33), 1.84], //CASA 7
+    [new Vector2(-1.58, -8.33), new Vector2(-1.68, -7.03), new Vector2(-0.98, -6.53), 1.89], //CASA 8
+    [new Vector2(-0.98, -6.53), new Vector2(-2.58, -10.03), new Vector2(-7.58, -13.13), -3.27], //CASA 9 DAVANTI
+    [new Vector2(-7.58, -13.13), new Vector2(-8.58, -12.83), new Vector2(-9.68, -13.63), -3.07], //CASA 10
+    [new Vector2(-9.68, -13.63), new Vector2(-11.08, -13.53), new Vector2(-11.98, -13.53), -2.56], //CASA 11
+    [new Vector2(-11.98, -13.53), new Vector2(-12.58, -13.23), new Vector2(-13.28, -12.93), -2.66], //CASA 12
+    [new Vector2(-13.28, -12.93), new Vector2(-14.18, -11.93), new Vector2(-14.18, -11.93), -2.66], //CASA 13
+    [new Vector2(-14.18, -11.93), new Vector2(-15.08, -9.83), new Vector2(-15.08, -9.83), 4.96], //CASA 14
+    [new Vector2(-15.08, -9.83), new Vector2(-15.48, -8.13), new Vector2(-15.48, -8.13),  4.96] //CASA 15
+]
 //#endregion
 
 //MODELS
@@ -67,13 +88,14 @@ let mi = new ModelImporter();
 //ADD
 let added = false;
 
-//LERP
-let beizerAlpha = -1;
+//debug
+let debug = true
 
 /*
  * Inizializza il motore e il gioco
  */
 async function initScene() {
+    if (debug) curPos = 5;
 
     if (renderer != null) return;
 
@@ -94,6 +116,7 @@ async function initScene() {
     document.getElementById("map").appendChild(renderer.domElement);
     //#endregion
     //#region SETUP CAMERA
+    if (width < 1000) defFov = 90;
     camera = new THREE.PerspectiveCamera(defFov, width / height, 0.1, 500);
     camera.position.set(40, 30, 40);
     camera.lookAt(0, 5, 0)
@@ -106,21 +129,29 @@ async function initScene() {
     //#region CREAZIONE PLAYER
     player = new Player();
     //#endregion
-    //#region CREAZIONE LUCE DEL TABELLONE
-    dl = new THREE.PointLight(0xffffcc, 10000);
+    //#region SETUP LUCI
+    dl = new THREE.DirectionalLight(0xffffcc, 4);
+    const ShadowmapSize = 8096;
+    const increaseAmount = 50;
     dl.position.set(30, 40, 0);
+    dl.lookAt(0, 0, 0);
     dl.castShadow = true;
-    const ShadowmapSize = 4096
     dl.shadow.mapSize = new THREE.Vector2(ShadowmapSize, ShadowmapSize);
-    dl.shadow.bias = -0.002;
+    dl.shadow.bias = -0.0001;
+    dl.shadow.camera.left -= increaseAmount;
+    dl.shadow.camera.right += increaseAmount;
+    dl.shadow.camera.top += increaseAmount;
+    dl.shadow.camera.bottom -= increaseAmount;
+    dl.shadow.camera.near = 1;
+    dl.shadow.camera.far = 1000;
+
+    let dl2 = new THREE.AmbientLight(0xffffff, 0.25); //rende le ombre meno black
+    scene.add(dl2)
     scene.add(dl);
     //#endregion
 
-
     document.getElementById("play").style.display = "none"
     renderer.setAnimationLoop(animate);
-
-
 }
 
 function lerpCameraVision(v1, v2, alpha) {
@@ -138,13 +169,10 @@ let start = false;
 function animate() {
     dt = clock.getDelta();
 
-
     renderer.clear();
     renderer.render(scene, camera);
 
-
     if (addedW) player.update(dt, world.getWorld());
-
 
     if (mi.everythingLoaded()) {
         if (lives !== 0) {
@@ -201,6 +229,9 @@ function animate() {
                         }
                     }
 
+                    let timeA = 15000;
+                    let timeB = 3000;
+                    if (debug) timeA = timeB = 1;
                     if (!impact && player.getPosition().y < 0.8) {
                         impact = true;
                         player.playOnceWithTransition("impact");
@@ -211,8 +242,8 @@ function animate() {
                                 player.play("idle")
                                 transition = 0;
                                 curState = "CUTSCENE_INITIAL";
-                            }, 15000) //15000 val giusto
-                        }, 3000) //3000 val giusto
+                            }, timeA) //15000 val giusto
+                        }, timeB) //3000 val giusto
                     }
                     break;
                 case "CUTSCENE_INITIAL": //PRIMA CUTSENE
@@ -231,29 +262,28 @@ function animate() {
                         transition += 0.001 * dt;
                     } else if (start) {
                         start = !start;
-                        beizerAlpha = 0;
+                        transition = 0;
                         player.play("idle");
                         curState = "LVL1"
-
                     }
                     break;
                 case "LVL1":
-                    if (beizerAlpha >= 1 && beizerAlpha < 2) { //Caso in cui ruota su se stesso per andare alla prossima casa
-                        if (curPos === 6 || curPos === 5) beizerAlpha = 2.1; //Non lo fa se deve tornare all'inizio o va al prossimo livello
+                    if (transition >= 1 && transition < 2) { //Caso in cui ruota su se stesso per andare alla prossima casa
+                        if (curPos === 6 || curPos === 5) transition = 2.1; //Non lo fa se deve tornare all'inizio o va al prossimo livello
                         else { //Giro
-                            player.play("rT")
-                            player.lerpAngleY(l1Points[curPos][3], ((beizerAlpha - 1)) / 10);
-                            beizerAlpha += 0.5 * dt;
+                            player.playOnceWithTransition("rT")
+                            player.lerpAngleY(l1Points[curPos][3], ((transition - 1)) / 10);
+                            transition += 0.5 * dt;
                         }
-                    } else if (beizerAlpha >= 0 && beizerAlpha < 1) { //Deve camminare alla prossima casa
+                    } else if (transition >= 0 && transition < 1) { //Deve camminare alla prossima casa
                         if (curPos === 5) player.play("walkW");
                         else if (curPos === 6) player.play("walkL");
                         else player.play("walk")
 
-                        player.lerpWithBeizerCurve(l1Points[curPos][0], l1Points[curPos][1], l1Points[curPos][2], beizerAlpha);
-                        if (curPos === 5) beizerAlpha += 0.25 * dt; //Se sta andando al ponte ci va più lentamente
-                        else beizerAlpha += 0.5 * dt;
-                    } else if (beizerAlpha > 2 && !timeout && answered) { //cosi chiede solo una volta
+                        player.lerpWithBeizerCurve(l1Points[curPos][0], l1Points[curPos][1], l1Points[curPos][2], transition);
+                        if (curPos === 5) transition += 0.25 * dt; //Se sta andando al ponte ci va più lentamente
+                        else transition += 0.5 * dt;
+                    } else if (transition > 2 && !timeout && answered) { //cosi chiede solo una volta
 
                         if (curPos < 5) { //Quando sta navigando per le case
                             timeout = true;
@@ -271,6 +301,8 @@ function animate() {
                             resetLVL1()
                         } else {
                             curState = "LVL2"
+                            curPos = 0;
+                            timeout = false;
                             asked = false;
                             answered = false;
                             transition = 0;
@@ -284,6 +316,7 @@ function animate() {
                     }
                     break;
                 case "LVL2":
+                    if (debug) player.setEnergy(4);
                     //#region LEVEL 2 PART 1
                     if (transition < 0.1) { // PREPARING CAMERA
                         player.play("idleW")
@@ -296,12 +329,12 @@ function animate() {
                         transition += 0.001 * dt;
                         guessed = true;
                     } else if (transition < 1.107 && (player.getEnergy() > 0.1 && guessed) || (player.getEnergy() > -0.7 && !guessed)) { //CLIMBING THE MOUNTAIN
-                        if (player.getEnergy()>-1) player.decreaseEnergy(0.1 * dt) //CHEAT MATTO 2: commenta la linea di codice
+                        if (player.getEnergy() > -1) player.decreaseEnergy(0.1 * dt) //CHEAT MATTO 2: commenta la linea di codice
                         player.lerpWithBeizerCurve(l2Tol2p2[0], l2Tol2p2[1], l2Tol2p2[2], transition - 0.107, !guessed);
                         transition += 0.1 * dt * player.getEnergy();
                     } //#endregion
                     //#region LEVEL 2 PART 2
-                    if ((transition > 1.107 && transition < 2.107)){
+                    if ((transition > 1.107 && transition < 2.107)) {
                         if ((player.getEnergy() > 0.1 && guessed) || (player.getEnergy() > -0.7 && !guessed)) {
                             if (transition < 1.207) {
                                 camera.position.lerp(l2p2Pos, transition - 1.107);
@@ -310,10 +343,10 @@ function animate() {
                             if (player.getEnergy() > -1) player.decreaseEnergy(0.1 * dt) //CHEAT MATTO 2: commenta la linea di codice
                             player.lerpWithBeizerCurve(l2Tol3[0], l2Tol3[1], l2Tol3[2], transition - 1.107, !guessed);
                         }
-                    } else if (transition > 2.107){ //condition to next level
+                    } else if (transition > 2.107) { //condition to next level
                         player.play("idle");
-                        player.setEnergy(0.7);
-                        curState="LVL3";
+                        if (!debug) player.setEnergy(0.7);
+                        curState = "LVL3";
                         transition = 0;
                     }
                     //#endregion
@@ -321,7 +354,9 @@ function animate() {
                     if (transition > 0.107) {
                         if (!asked && ((player.getEnergy() < 0.1 && guessed) || (player.getEnergy() < -0.7 && !guessed))) { //condition to ask
                             player.play("tired");
-                            setTimeout(()=>{ask(2)},1000)
+                            setTimeout(() => {
+                                ask(2)
+                            }, 1000)
                             asked = true;
                             answered = false;
                         } else if (answered) { //action if answered
@@ -343,21 +378,41 @@ function animate() {
                     if (transition > 0.1) camera.lookAt(player.getPosition());
                     break;
                 case "LVL3":
-                    if (transition<0.1){
-                        camera.position.lerp(new Vector3(1.9,13,1.2),transition);
-                    } else if (transition<1.1){
+                    if (transition < 0.1) { //MOVING TO TOWER
+                        camera.position.lerp(new Vector3(1.9, 13, 1.2), transition);
+                    } else if (transition < 1.1) { //WALK TO TORNANTE
                         player.play("walk");
-                        camera.position.lerp(new Vector3(-1.8023,14,-1.3600),(transition-0.1)/10)
-                        player.lerpWithBeizerCurve(l3toCity[0][0],l3toCity[0][1],l3toCity[0][2],transition-0.1,false);
-                    } else if (transition<2.1){
+                        camera.position.lerp(new Vector3(-1.8023, 14, -1.3600), (transition - 0.1) / 10)
+                        player.lerpWithBeizerCurve(l3toCity[0][0], l3toCity[0][1], l3toCity[0][2], transition - 0.1, false);
+                    } else if (transition < 2.1) { //TORNANTE TO CITY
                         player.play("walkW");
-                        camera.position.lerp(new Vector3(-6.78,14,-5.03),(transition-1.1)/10)
-                        player.lerpWithBeizerCurve(l3toCity[1][0],l3toCity[1][1],l3toCity[1][2],transition-1.1,false);
-                    } else {
+                        camera.position.lerp(new Vector3(-3.86, 14, -5.32), (transition - 1.1) / 10)
+                        player.lerpWithBeizerCurve(l3toCity[1][0], l3toCity[1][1], l3toCity[1][2], transition - 1.1, false);
+
+
+                    } else { //GAME IN CITY
+                        if (transition < 3.1) {
+                            player.play("walk");
+                            player.lerpWithBeizerCurve(l3Points[curPos][0], l3Points[curPos][1], l3Points[curPos][2], transition - 2.1);
+                        } else if (transition < 4.1) {
+                            player.playOnceWithTransition("rT")
+                            player.lerpAngleY(l3Points[curPos][3], ((transition - 3.1)) / 10);
+                        } else {
+                            player.play("idle");
+                            if (ready) {
+                                ready = false;
+                                if (curPos < l3Points.length - 1) {
+                                    curPos++;
+                                    transition = 2.11;
+                                }
+                            }
+                        }
+
+                        camera.position.set(player.getPosition().x -1, player.getPosition().y + 2, player.getPosition().z);
                         player.play("idleW")
                     }
 
-                    transition+=0.1*dt*player.getEnergy();
+                    transition += 0.1 * dt * player.getEnergy();
                     camera.lookAt(player.getPosition())
 
                     break;
@@ -373,7 +428,7 @@ function resetLVL1() {
     timeout = false;
     answered = false;
     asked = false;
-    beizerAlpha = 0;
+    transition = 0;
 }
 
 window.addEventListener('resize', onWindowResize, false)
@@ -385,16 +440,23 @@ function onWindowResize() {
 }
 
 document.addEventListener('keydown', function (event) {
-    console.log("----DEBUG----")
-    console.log("POSITION: (x)" + player.getPosition().x + " (y)" + player.getPosition().y + " (z)" + player.getPosition().z)
-    console.log("ROTATION (y): " + player.getRotation().y)
-    console.log("-------------")
-    if (event.key === "s") player.getPosition().x += 0.1;
-    if (event.key === "w") player.getPosition().x -= 0.1;
-    if (event.key === "a") player.getPosition().z += 0.1;
-    if (event.key === "d") player.getPosition().z -= 0.1;
-    if (event.key === "q") player.getRotation().y += 0.1;
-    if (event.key === "e") player.getRotation().y -= 0.1;
+    if (debug) {
+        if (event.key === "r") ready = true;
+        if (event.key === "p") {
+            console.log("----DEBUG----")
+            console.log("POSITION: (x)" + player.getPosition().x + " (y)" + player.getPosition().y + " (z)" + player.getPosition().z)
+            console.log("ROTATION (y): " + player.getRotation().y)
+            console.log("-------------")
+        } else if (event.key === "l") console.log(player.getPosition().x + ", " + player.getPosition().z);
+
+        if (event.key === "s") player.getPosition().x += 0.1;
+        if (event.key === "w") player.getPosition().x -= 0.1;
+        if (event.key === "a") player.getPosition().z += 0.1;
+        if (event.key === "d") player.getPosition().z -= 0.1;
+        if (event.key === "q") player.getRotation().y += 0.1;
+        if (event.key === "e") player.getRotation().y -= 0.1;
+    }
 });
+let ready = false;
 
 window.onload = initScene;

@@ -9,7 +9,7 @@ export class Board {
         this.island = null;
         this.skybox = null;
 
-        mi.importWithName("../models/world.glb","world");
+        mi.importWithName("../models/worlda.glb","world");
         mi.importWithName("../models/skybox.glb","skybox");
     }
 

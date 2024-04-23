@@ -135,7 +135,7 @@ export class Player {
     update(dt, island) {
         if (this.aniP !== null) {
             this.aniP.update(dt);
-            if (curState === "LVL2") this.aniP.setPlaybackSpeed(Math.abs(this.energy*1.5))
+            if (curState === "LVL2" || curState === "LVL3") this.aniP.setPlaybackSpeed(Math.abs(this.energy*1.5))
         }
 
         if (this.player !== null && curState !== "WAITING" && curState !== "PREPARING") {
