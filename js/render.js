@@ -47,7 +47,7 @@ const l1Points = [ // I TRE VECTOR SONO INIZIO,SECONDO PUNTO E FINE
     [new Vector2(22.19, -3.78), new Vector2(21.388, -2.09), new Vector2(20.59, -2.38), -2.1145] //FAILED LEVEL
 
 ]
-let curPos = 5; //CHEAT MATTO 3: se metti curPos a 5 skippa il livello 1
+let curPos = 0; //CHEAT MATTO 3: se metti curPos a 5 skippa il livello 1
 //endregion
 
 //#region livello 2
@@ -56,6 +56,10 @@ const l2AfterBridge = new Vector3(11.4039, 5, -2.688);
 const l2Tol2p2 = [new Vector2(11.4039, -2.688), new Vector2(10.097, -1.989), new Vector2(8.597, -11.889)];
 const l2Tol3 = [new Vector2(8.597, -11.889), new Vector2(3, -23), new Vector2(3.397, -9.083)];
 const l2p2Pos = new Vector3(3, 10, -18);
+//#endregion
+
+//#region livello 3
+const l3toCity = [[new Vector2(3.397, -9.083),new Vector2(3.6976,8.0394),new Vector2(-2.9023,1.1399)],[new Vector2(-2.9023,1.1399),new Vector2(-3.89,-5.24),new Vector2(-8.39,-8.24)]];
 //#endregion
 
 //MODELS
@@ -145,9 +149,7 @@ function animate() {
     if (mi.everythingLoaded()) {
         if (lives !== 0) {
             //AUTOMA A STATI FINITI
-            if (addedW) {
-                sky.rotation.y += 0.05 * dt;
-            }
+            if (addedW) sky.rotation.y += 0.05 * dt;
             switch (curState) {
                 case "WAITING": //CARICAMENTO DEL MONDO
                     added = true;
@@ -209,8 +211,8 @@ function animate() {
                                 player.play("idle")
                                 transition = 0;
                                 curState = "CUTSCENE_INITIAL";
-                            }, 1) //15000 val giusto
-                        }, 1) //3000 val giusto
+                            }, 15000) //15000 val giusto
+                        }, 3000) //3000 val giusto
                     }
                     break;
                 case "CUTSCENE_INITIAL": //PRIMA CUTSENE
@@ -308,17 +310,21 @@ function animate() {
                             if (player.getEnergy() > -1) player.decreaseEnergy(0.1 * dt) //CHEAT MATTO 2: commenta la linea di codice
                             player.lerpWithBeizerCurve(l2Tol3[0], l2Tol3[1], l2Tol3[2], transition - 1.107, !guessed);
                         }
-                    } else if (transition > 2.107) player.play("idle")
+                    } else if (transition > 2.107){ //condition to next level
+                        player.play("idle");
+                        player.setEnergy(0.7);
+                        curState="LVL3";
+                        transition = 0;
+                    }
                     //#endregion
-
-
+                    //#region QUESTION MANAGEMENT
                     if (transition > 0.107) {
-                        if (!asked && ((player.getEnergy() < 0.1 && guessed) || (player.getEnergy() < -0.7 && !guessed))) {
-                            player.play("idle");
-                            ask(2);
+                        if (!asked && ((player.getEnergy() < 0.1 && guessed) || (player.getEnergy() < -0.7 && !guessed))) { //condition to ask
+                            player.play("tired");
+                            setTimeout(()=>{ask(2)},1000)
                             asked = true;
                             answered = false;
-                        } else if (answered) {
+                        } else if (answered) { //action if answered
                             if (guessed) {
                                 player.play("walkW");
                                 asked = false;
@@ -333,10 +339,26 @@ function animate() {
                             }
                         }
                     }
-
-                    if (transition > 0.1) {
-                        camera.lookAt(player.getPosition());
+                    //#endregion
+                    if (transition > 0.1) camera.lookAt(player.getPosition());
+                    break;
+                case "LVL3":
+                    if (transition<0.1){
+                        camera.position.lerp(new Vector3(1.9,13,1.2),transition);
+                    } else if (transition<1.1){
+                        player.play("walk");
+                        camera.position.lerp(new Vector3(-1.8023,14,-1.3600),(transition-0.1)/10)
+                        player.lerpWithBeizerCurve(l3toCity[0][0],l3toCity[0][1],l3toCity[0][2],transition-0.1,false);
+                    } else if (transition<2.1){
+                        player.play("walkW");
+                        camera.position.lerp(new Vector3(-6.78,14,-5.03),(transition-1.1)/10)
+                        player.lerpWithBeizerCurve(l3toCity[1][0],l3toCity[1][1],l3toCity[1][2],transition-1.1,false);
+                    } else {
+                        player.play("idleW")
                     }
+
+                    transition+=0.1*dt*player.getEnergy();
+                    camera.lookAt(player.getPosition())
 
                     break;
             }
