@@ -1,5 +1,6 @@
 import {AnimationManager, ModelImporter} from "./Importers.js";
 import * as THREE from "three";
+import {Vector2} from "three";
 
 const mi = new ModelImporter();
 
@@ -100,7 +101,6 @@ export class Player {
     }
 
     lerpWithBeizerCurve(p1, p2, p3, alpha, reverse) {
-        this.destination = calcDistance();
         this.player.position.x = beizerFormula(p1.x, p2.x, p3.x, alpha);
         this.player.position.z = beizerFormula(p1.y, p2.y, p3.y, alpha);
 
@@ -118,6 +118,7 @@ export class Player {
             )
         }
     }
+
 
     lerpAngleY(v2, alpha) {
         let targetQuaternion = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), v2);
@@ -157,8 +158,19 @@ export class Player {
     }
 }
 
-function calcDistance() {
+function calcDistance(NoP,alpha,p1,p2,p3) {
+    let dist = 0;
+    const increment = (1-alpha)/NoP;
 
+    for (let i = 0; i < NoP ; i++) {
+        let p1 = new Vector2(beizerFormula(p1.x, p2.x, p3.x, alpha),beizerFormula(p1.y, p2.y, p3.y, alpha));
+        let p2 = new Vector2(beizerFormula(p1.x, p2.x, p3.x, alpha),beizerFormula(p1.y, p2.y, p3.y, alpha+increment));
+
+        dist+=p1.distanceTo(p2);
+        alpha+=increment;
+    }
+
+    return dist;
 }
 
 function beizerFormula(p1, p2, p3, alpha) {

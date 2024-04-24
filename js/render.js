@@ -97,7 +97,7 @@ let mi = new ModelImporter();
 let added = false;
 
 //debug
-let debug = false;
+let debug = true;
 
 /*
  * Inizializza il motore e il gioco
@@ -458,7 +458,7 @@ function animate() {
                     },5000)
                 } else if (finalQuestions === 0) curState = "WIN"
 
-                transition += 0.1 * dt * player.getEnergy();
+                transition += dt * 0.1;
                 camera.lookAt(player.getPosition())
                 break;
             case "RESTART":
