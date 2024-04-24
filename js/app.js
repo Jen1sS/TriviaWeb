@@ -18,7 +18,7 @@ let dt;
 //PLAYER
 let player;
 let streak = 0;
-let errors = [0, 0, 0, 10, 0];
+let errors = [0, 0, 0, 0, 0];
 
 
 class Question {
