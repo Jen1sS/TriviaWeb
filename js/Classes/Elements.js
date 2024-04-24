@@ -10,6 +10,7 @@ export class Player {
         this.generated = false;
         this.energy = 0.7; // def 0.7
         this.position = 0; //seleziona la pos iniziale
+        this.lives = 3;
         this.raycaster = new THREE.Raycaster();
 
 
@@ -48,6 +49,7 @@ export class Player {
             this.aniP.import("../animations/walkL.glb", "walkL");
             this.aniP.import("../animations/idleW.glb", "idleW");
             this.aniP.import("../animations/tired.glb", "tired");
+            this.aniP.import("../animations/jump.glb", "jump");
         }
     }
 
@@ -138,7 +140,7 @@ export class Player {
             if (curState === "LVL2" || curState === "LVL3") this.aniP.setPlaybackSpeed(Math.abs(this.energy*1.5))
         }
 
-        if (this.player !== null && curState !== "WAITING" && curState !== "PREPARING") {
+        if (this.player !== null && curState !== "WAITING" && curState !== "PREPARING" && curState !== "RESTART") {
 
             this.player.position.y += 0.4; //offset cosi il player pare al suo posto
             this.raycaster.set(this.player.position, new THREE.Vector3(0, -1, 0));

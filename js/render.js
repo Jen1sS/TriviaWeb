@@ -64,7 +64,7 @@ const l3toCity = [
     [new Vector2(-2.9023, 1.1399), new Vector2(-3.89, -5.24), new Vector2(-8.39, -8.24)] //TOWER TO CITY
 ];
 const l3Points = [
-    [new Vector2(-8.39, -8.24), new Vector2(-3.98, -7.83), new Vector2(-3.98, -7.83), 0.82], //CASA 1
+    [new Vector2(-8.39, -8.24), new Vector2(-3.98, -7.83), new Vector2(-3.98, -7.83), -4.08], //CASA 1
     [new Vector2(-3.98, -7.83), new Vector2(-4.88, -8.73), new Vector2(-4.88, -8.73), 2.48], //CASA 2
     [new Vector2(-4.88, -8.73), new Vector2(-5.98, -9.83), new Vector2(-5.98, -9.83), -3.41], // CASA 3
     [new Vector2(-5.98, -9.83), new Vector2(-7.78, -10.03), new Vector2(-7.78, -10.03), 3.16], //CASA 4
@@ -79,9 +79,18 @@ const l3Points = [
     [new Vector2(-11.98, -13.53), new Vector2(-12.58, -13.23), new Vector2(-13.28, -12.93), -2.66], //CASA 12
     [new Vector2(-13.28, -12.93), new Vector2(-14.18, -11.93), new Vector2(-14.18, -11.93), -2.66], //CASA 13
     [new Vector2(-14.18, -11.93), new Vector2(-15.08, -9.83), new Vector2(-15.08, -9.83), 4.96], //CASA 14
-    [new Vector2(-15.08, -9.83), new Vector2(-15.48, -8.13), new Vector2(-15.48, -8.13),  4.96] //CASA 15
+    [new Vector2(-15.08, -9.83), new Vector2(-15.48, -8.13), new Vector2(-15.48, -8.13), 4.96] //CASA 15
+]
+const l3Camera = [
+    new Vector3(-2.08, 14, -9.18),//TO SECOND ROW
+    new Vector3(-11.85, 13.64, -9.51), //TO FIRST ROW
 ]
 //#endregion
+//#region livello 4
+const l4DoorCurve = [new Vector3(-15.48, -8.13),new Vector3(),new Vector3(-13.17,-6.23)];
+//#endregion
+
+
 
 //MODELS
 let mi = new ModelImporter();
@@ -89,7 +98,7 @@ let mi = new ModelImporter();
 let added = false;
 
 //debug
-let debug = true
+let debug = true;
 
 /*
  * Inizializza il motore e il gioco
@@ -173,6 +182,7 @@ function animate() {
     renderer.render(scene, camera);
 
     if (addedW) player.update(dt, world.getWorld());
+    if (player.lives<0) curState="RESTART";
 
     if (mi.everythingLoaded()) {
         if (lives !== 0) {
@@ -271,7 +281,7 @@ function animate() {
                     if (transition >= 1 && transition < 2) { //Caso in cui ruota su se stesso per andare alla prossima casa
                         if (curPos === 6 || curPos === 5) transition = 2.1; //Non lo fa se deve tornare all'inizio o va al prossimo livello
                         else { //Giro
-                            player.playOnceWithTransition("rT")
+                            player.play("rT");
                             player.lerpAngleY(l1Points[curPos][3], ((transition - 1)) / 10);
                             transition += 0.5 * dt;
                         }
@@ -392,23 +402,32 @@ function animate() {
 
                     } else { //GAME IN CITY
                         if (transition < 3.1) {
+                            if (curPos === 4) camera.position.lerp(l3Camera[0], (transition - 2.1) / 10);
+                            else if (curPos === 11) camera.position.lerp(l3Camera[1], (transition - 2.1) / 10);
+
                             player.play("walk");
                             player.lerpWithBeizerCurve(l3Points[curPos][0], l3Points[curPos][1], l3Points[curPos][2], transition - 2.1);
                         } else if (transition < 4.1) {
-                            player.playOnceWithTransition("rT")
+                            player.play("rT");
                             player.lerpAngleY(l3Points[curPos][3], ((transition - 3.1)) / 10);
                         } else {
                             player.play("idle");
-                            if (ready) {
-                                ready = false;
+                            if (!asked && !debug) {
+                                asked = true;
+                                ask(3);
+
+                            } else if ((asked && answered) || debug){
+                                answered=false;
+                                asked = false;
+                                if (!guessed) player.lives--;
                                 if (curPos < l3Points.length - 1) {
                                     curPos++;
                                     transition = 2.11;
-                                }
+                                } else curState = "LVL4";
+
                             }
                         }
 
-                        camera.position.set(player.getPosition().x -1, player.getPosition().y + 2, player.getPosition().z);
                         player.play("idleW")
                     }
 
@@ -416,6 +435,22 @@ function animate() {
                     camera.lookAt(player.getPosition())
 
                     break;
+                case "LVL4":
+
+                    break;
+                case "RESTART":
+                    delay+=dt;
+                    if (!got){
+                        player.playOnceWithTransition("jump")
+                        coord = new Vector3(player.getPosition().x,player.getPosition().y,player.getPosition().z);
+                        got=true
+                    }
+                    if (delay>1) {
+                        camera.lookAt(coord);
+                        player.getPosition().y += 5 * dt;
+                        if (player.getPosition().y - 10 > camera.position.y) location.reload(true);
+                    }
+                    break
             }
         }
     }
@@ -423,6 +458,9 @@ function animate() {
 
 let timeout = false;
 let asked = false;
+let got = false;
+let coord;
+let delay = 0;
 
 function resetLVL1() {
     timeout = false;
