@@ -12,6 +12,7 @@ export class Player {
         this.position = 0; //seleziona la pos iniziale
         this.lives = 3;
         this.raycaster = new THREE.Raycaster();
+        this.destination = 0;
 
 
         mi.importWithName("../models/avatar.glb", "player")
@@ -99,6 +100,7 @@ export class Player {
     }
 
     lerpWithBeizerCurve(p1, p2, p3, alpha, reverse) {
+        this.destination = calcDistance();
         this.player.position.x = beizerFormula(p1.x, p2.x, p3.x, alpha);
         this.player.position.z = beizerFormula(p1.y, p2.y, p3.y, alpha);
 
@@ -153,6 +155,10 @@ export class Player {
             }
         }
     }
+}
+
+function calcDistance() {
+
 }
 
 function beizerFormula(p1, p2, p3, alpha) {

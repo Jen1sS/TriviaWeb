@@ -5,33 +5,12 @@ let points = 0;
 let timer;
 let asked = false;
 let guessed = false;
-
 let started = false;
+let category;
 
 
 //STATO DELL'AUTOMA
 let curState = "WAITING";
-
-//PLAYER
-let lives = 5;
-let completed = {0xd900ff: false, 0x1e00ff: false, 0x00f2ff: false, 0x00ff3c: false, 0xfbff00: false}
-let oldPos = 0; //ultima posizione
-let won;
-
-
-//ROLL
-let positions = 0; //roll uscito
-let time = randBetween(5, 1);
-let rolled = false;
-let active = false
-let id;
-
-//LERPING
-let timeA = 1;
-
-// CASELLE (colori)
-let c;
-let color = null; //colore della casella indovinata
 
 //DELTA TIME
 let dt;
@@ -39,7 +18,7 @@ let dt;
 //PLAYER
 let player;
 let streak = 0;
-
+let errors = [0, 0, 0, 10, 0];
 
 
 class Question {
@@ -78,29 +57,39 @@ class Question {
 }
 
 //Da la domanda per il colore e chiede anche il numero di domande da recuperare nella fetch
-async function getQuestions(level) {
+async function getQuestions(level, worst) {
     let res;
     let dif;
 
-    switch (randBetween(5,1)) {
-        case 1: //Entertainment (Books, Films, Music, Musical & Theaters, Television, Board Games, Video Games
+    if (worst) {
+        //FIND WORST CATEGORY
+        let index = 0;
+        for (let i = 0; i < errors.length; i++) if (errors[i] > errors[index]) index = i;
+        category = index;
+    } else {
+        //RANDOM CATEGORY
+        category = randBetween(4, 0);
+    }
+
+    switch (category) {
+        case 0: //Entertainment (Books, Films, Music, Musical & Theaters, Television, Board Games, Video Games
             res = randBetween(16, 10) + "";
             break;
-        case 2: //General Knowledge
-            res = "9";
+        case 1: //General Knowledge
+            res = 9;
             break;
-        case 3: //Mithology
-            res = "20";
+        case 2: //Mithology
+            res = 20;
             break;
-        case 4: //Science & Nature, Computers, Math
+        case 3: //Science & Nature, Computers, Math
             res = randBetween(19, 17);
             break;
-        case 5: //History, Politics, Art
+        case 4: //History, Politics, Art
             res = randBetween(25, 23);
             break;
     }
 
-    switch (level){
+    switch (level) {
         case 1:
             dif = "easy"
             break;
@@ -112,27 +101,32 @@ async function getQuestions(level) {
             break;
     }
 
-    const response = await fetch("https://opentdb.com/api.php?amount=1&category=" + res +"&difficulty=" + dif);
+    const response = await fetch("https://opentdb.com/api.php?amount=1&category=" + res + "&difficulty=" + dif);
     const q = await response.json();
     quest = []
     for (let i = 0; i < q.results.length; i++) quest.push(new Question(q.results[i]));
 }
 
 //Prende la prossima domanda e in caso non ci sia fa un fetch
-function next(level) {
+function next(level, worst) {
     if (!started) {
-        getQuestions(level).then(r => loadQuestion());
+        getQuestions(level, worst).then(r => loadQuestion());
         return;
     }
     if (quest.length > 0) loadQuestion();
-    else getQuestions(level).then(r => loadQuestion());
+    else getQuestions(level, worst).then(r => loadQuestion());
 }
 
 
 //CHIEDI DOMANDA
 function ask(level) {
-        next(level);
-        asked = true;
+    next(level, false);
+    asked = true;
+}
+
+function askWorst(level) {
+    next(level, true);
+    asked = true;
 }
 
 //Carica la domanda sulla pagina
@@ -142,7 +136,7 @@ function loadQuestion() {
     end = false;
     timer = 10;
 
-    console.log(quest[quest.length-1].getRightAnswer()); //CHEAT MATTI D:
+    console.log(quest[quest.length - 1].getRightAnswer()); //CHEAT MATTI D:
 
     if (quest[quest.length - 1].getAnswers().length === 2) {
         body.innerHTML = "<div id='question'><h2>" + quest[quest.length - 1].getName() + "</h2>" +
@@ -201,18 +195,19 @@ function verify(num) {
             guessed = true;
             streak++;
         } else {
-            lives--;
+            errors[category]++;
             document.getElementById("question").style.background = "radial-gradient(circle, rgba(255,149,149,1) 0%, rgba(255,0,0,1) 100%)"
             clearTimeout(decrementTimer);
             setTimeout(hide, 750)
             guessed = false;
-            streak=0;
+            streak = 0;
         }
         end = true;
         answered = true;
         quest.pop();
     }
 }
+
 let answered = false;
 
 
@@ -256,9 +251,6 @@ function randBetween(max, min) {
     return Math.floor(Math.random() * (max - min + 1) + min)
 }
 
-function decrement() {
-    time--
-}
 
 // Lerp esponenziale per dado (formula Rossaniana)
 function erp(v1, v2, alpha) { // 5 is temp
