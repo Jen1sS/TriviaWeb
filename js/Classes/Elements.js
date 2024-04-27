@@ -33,7 +33,8 @@ export class Player {
             this.generated = true;
             this.player = mi.getModel("player");
             this.player.position.set(24, 50, 4); //prendo posizione casella 0
-            this.player.scale.set(0.5, 0.5, 0.5);
+            const scale = 0.3;
+            this.player.scale.set(scale,scale,scale);
             this.player.rotation.y += Math.PI / 2;
 
             mi.addShadows("player");
