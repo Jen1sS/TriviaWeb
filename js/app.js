@@ -20,6 +20,9 @@ let player;
 let streak = 0;
 let errors = [0, 0, 0, 0, 0];
 
+//sound
+let am;
+
 
 class Question {
 
@@ -188,15 +191,17 @@ function verify(num) {
                     break;
 
             }
+            am.play("guess",false,1);
             points += point;
             clearTimeout(decrementTimer);
-            document.getElementById("question").style.background = "radial-gradient(circle, rgba(149,255,166,1) 0%, rgba(0,255,72,1) 100%)";
+            document.getElementById("question").style.background = "radial-gradient(circle, rgba(149,255,166, 0.39) 0%, rgba(0,255,72, 0.39) 100%)";
             setTimeout(hide, 750)
             guessed = true;
             streak++;
         } else {
+            am.play("wrong",false,1);
             errors[category]++;
-            document.getElementById("question").style.background = "radial-gradient(circle, rgba(255,149,149,1) 0%, rgba(255,0,0,1) 100%)"
+            document.getElementById("question").style.background = "radial-gradient(circle, rgba(255,149,149, 0.39) 0%, rgba(255,0,0, 0.39) 100%)"
             clearTimeout(decrementTimer);
             setTimeout(hide, 750)
             guessed = false;

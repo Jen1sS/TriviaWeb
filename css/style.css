@@ -26,7 +26,8 @@ hr#header {
 
 div#question {
     text-align: center;
-    background-color: #e1e1e1;
+    background-color: rgba(225, 225, 225, 0.1);
+    backdrop-filter: blur(10px);
 
     padding-left: 1rem;
     padding-right: 1rem;
@@ -72,6 +73,7 @@ div#answers {
 
 div#stats{
     display: grid;
+    color: white;
     grid-template-columns: auto auto;
 }
 
@@ -80,7 +82,7 @@ hr#timeBar{
     height: 1rem;
     width: 90%;
     border-radius: 0.5rem;
-    background-color: green;
+    background-color: rgba(0, 128, 0);
     transition: width 0.99s  linear;
 
 }
@@ -104,19 +106,20 @@ button {
 
     font-size: larger;
     font-weight: bolder;
-    color: #000000;
+    color: white;
 
     border-color: rgba(1, 90, 255, 0.75);
     background: rgb(0, 225, 255);
-    background: radial-gradient(circle, rgb(0, 225, 255) 0%, rgba(26,120,231,1) 100%);
+    background: radial-gradient(circle, rgb(0, 225, 255, 0.39) 0%, rgba(26,120,231, 0.39) 100%);
 }
 
 button:hover {
     background: rgb(26,120,231);
-    background: radial-gradient(circle, rgb(26,120,231) 0%, rgba(0, 225, 255,1) 100%);
+    background: radial-gradient(circle, rgb(26,120,231, 0.39) 0%, rgba(0, 225, 255, 0.39) 100%);
 }
 
 h2 {
+    color: white;
     font-size: 30pt;
     font-weight: bolder;
 }

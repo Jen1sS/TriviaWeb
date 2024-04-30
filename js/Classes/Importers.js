@@ -1,4 +1,5 @@
 import {GLTFLoader} from "gltf";
+import * as THREE from 'three';
 import {AnimationMixer} from "three";
 
 const loaderGLTF = new GLTFLoader();
@@ -11,12 +12,11 @@ export class ModelImporter {
     }
 
 
-
     async import(path) {
-        this.importWithName(path,path)
+        this.importWithName(path, path)
     }
 
-    async importWithName(path,name) {
+    async importWithName(path, name) {
         this.elToAdd++;
         await loaderGLTF.load(
             // resource URL
@@ -41,11 +41,11 @@ export class ModelImporter {
         );
     }
 
-    addShadows(pathOrName){
+    addShadows(pathOrName) {
         this.elementsLoaded[pathOrName].traverse(function (node) {
-            if (node.isMesh){
-                node.castShadow=true;
-                node.receiveShadow=true;
+            if (node.isMesh) {
+                node.castShadow = true;
+                node.receiveShadow = true;
             }
         });
     }
@@ -58,8 +58,8 @@ export class ModelImporter {
         return this.elementsLoaded[pathOrName];
     }
 
-    clear(){
-        this.elementsLoaded={};
+    clear() {
+        this.elementsLoaded = {};
     }
 }
 
@@ -114,22 +114,23 @@ export class AnimationManager {
 
 
     lastCalled;
-    transitionTo(name, time) {
-        if (this.lastCalled!==name) {
 
-            this.lastAction=this.activeAction;
+    transitionTo(name, time) {
+        if (this.lastCalled !== name) {
+
+            this.lastAction = this.activeAction;
             this.activeAction = this.mixer.clipAction(this.animations[name]);
 
 
             this.lastAction.play();
             this.lastAction.crossFadeTo(this.activeAction, time, false);
-            this.activeAction.enabled=true;
+            this.activeAction.enabled = true;
             this.activeAction.play();
 
 
             this.playing = true;
         }
-        this.lastCalled=name;
+        this.lastCalled = name;
     }
 
     stopAll() {
@@ -140,10 +141,10 @@ export class AnimationManager {
         this.mixer.update(dt);
     }
 
-    doOnce(name,time){
+    doOnce(name, time) {
         const nextAction = this.mixer.clipAction(this.animations[name]);
-        nextAction.clampWhenFinished=true;
-        nextAction.repetitions=1;
+        nextAction.clampWhenFinished = true;
+        nextAction.repetitions = 1;
 
         this.activeAction.crossFadeTo(nextAction, time, false);
         setTimeout(() => {
@@ -152,26 +153,74 @@ export class AnimationManager {
             this.playing = false;
         }, time);
         this.playing = true;
-        this.lastCalled=name;
+        this.lastCalled = name;
 
     }
 
-    transitionAndDoOnce(name,time){
-        this.lastAction=this.activeAction;
+    transitionAndDoOnce(name, time) {
+        this.lastAction = this.activeAction;
         this.activeAction = this.mixer.clipAction(this.animations[name]);
 
 
         this.lastAction.play();
         this.lastAction.crossFadeTo(this.activeAction, time, false);
-        this.activeAction.enabled=true;
-        this.activeAction.clampWhenFinished=true;
-        this.activeAction.repetitions=1;
+        this.activeAction.enabled = true;
+        this.activeAction.clampWhenFinished = true;
+        this.activeAction.repetitions = 1;
         this.activeAction.play();
 
         this.playing = true;
     }
 
-    setPlaybackSpeed(value){
-        if (this.activeAction!==null) this.activeAction.timeScale = value;
+    setPlaybackSpeed(value) {
+        if (this.activeAction !== null) this.activeAction.timeScale = value;
+    }
+}
+
+export class AudioManager {
+    constructor(linker) {
+        this.elToAdd = 0;
+        this.audioLoaded = {};
+        this.audios = {};
+        this.loader = new THREE.AudioLoader();
+        this.sound = linker;
+    }
+
+    async import(path, name) {
+        this.elToAdd++;
+
+        await this.loader.load(path, (buffer) => {
+            this.elToAdd--;
+
+            if (name === undefined) this.audioLoaded[path] = buffer;
+            else this.audioLoaded[name] = buffer;
+        });
+    }
+
+    play(name, looping, volume, speedOrPitch, changePitch) {
+        if (this.audios[name] === undefined) this.audios[name] = new THREE.Audio(this.sound);
+        if (this.audios[name] !== undefined && this.audios[name].isPlaying === false) {
+            this.audios[name].setBuffer(this.audioLoaded[name]);
+            this.audios[name].setLoop(looping);
+            this.audios[name].setVolume(volume);
+            this.audios[name].play();
+        }
+        if (speedOrPitch !== undefined){
+            if (changePitch !== undefined && changePitch) this.audios[name].detune = speedOrPitch;
+            else this.audios[name].setPlaybackRate(speedOrPitch);
+        }
+
+    }
+
+    stop(name){
+        this.audios[name].stop();
+    }
+
+    setPlayBackSpeed(name, speed){
+        this.audios[name].playbackRate = speed;
+    }
+
+    everythingLoaded() {
+        return this.elToAdd === 0;
     }
 }

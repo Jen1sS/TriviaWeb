@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import {Vector2, Vector3} from 'three';
-import {ModelImporter} from './Classes/Importers.js';
+import {AudioManager, ModelImporter} from './Classes/Importers.js';
 import {Board} from "./Classes/Board.js";
 import {Player} from "./Classes/Elements.js";
 
@@ -28,12 +28,20 @@ let sky;
 let island;
 let addedW = false;
 
+//AUDIO
+let audio;
+
+
+
+
 //Visuali della camera necessarie per lerping
 let curLook = new THREE.Vector3(0, 5, 0);
-//cutsene iniziale
+//#region cutsene iniziale
 const portLook = new THREE.Vector3(24, 1, 4);
 const portPos = new THREE.Vector3(21.5, 2, 4);
 const fallPos = new THREE.Vector3(24, -0.89, 4);
+//#endregion
+
 //#region livello 1
 const l1Look = new THREE.Vector3(10, -3, -15);
 const l1Pos = new THREE.Vector3(19.86, 2.97, -3.84);
@@ -86,6 +94,7 @@ const l3Camera = [
     new Vector3(-11.85, 13.64, -9.51), //TO FIRST ROW
 ]
 //#endregion
+
 //#region livello 4
 const l4DoorCurve = [new Vector2(-15.48, -8.13), new Vector2(-13.27, -8.53), new Vector2(-13.17, -7.43)];
 const l4Points = [
@@ -143,7 +152,7 @@ async function initScene() {
     //#endregion
     //#region SETUP LUCI
     dl = new THREE.DirectionalLight(0xffffcc, 4);
-    const ShadowmapSize = 8096;
+    const ShadowmapSize = 16384;
     const increaseAmount = 50;
     dl.position.set(30, 40, 0);
     dl.lookAt(0, 0, 0);
@@ -157,7 +166,7 @@ async function initScene() {
     dl.shadow.camera.near = 1;
     dl.shadow.camera.far = 1000;
 
-    let dl2 = new THREE.AmbientLight(0xffffff, 0.25); //rende le ombre meno black
+    let dl2 = new THREE.AmbientLight(0xffffff, 1); //rende le ombre meno black
     scene.add(dl2)
     scene.add(dl);
     //#endregion
@@ -176,7 +185,6 @@ function lerpCameraVision(v1, v2, alpha) {
 let transition = 0;
 let falling = false;
 let impact = falling;
-let start = false;
 
 function areVectorsEqual(vector1, vector2, delta) { //Y non considerato perchè nel mio caso non serve
     if (delta === undefined) delta = 0.2;
@@ -213,303 +221,378 @@ function animate() {
     if (addedW) player.update(dt, world.getWorld());
     if (player.lives < 0) curState = "RESTART";
 
+
     if (mi.everythingLoaded()) {
+
+
         //AUTOMA A STATI FINITI
         if (addedW) sky.rotation.y += 0.05 * dt;
-        switch (curState) {
-            case "WAITING": //CARICAMENTO DEL MONDO
-                added = true;
+        if ((am !== undefined && am.everythingLoaded()) || (curState==="PREPARING" || curState==="WAITING")) { //cosi posso fare play quando mi pare
 
-                //#region Loading elements
-                if (player.readyToGenerate() && !addedP) {
-                    addedP = true;
-                    player.generate();
-                    if (!insertedP) {
-                        insertedP = true;
-                        player.rotateY(4.12334) //circa 21pi/16
-                        scene.add(player.getPlayer());
-                    }
-                }
-                if (world.readyToUse() && !addedW) {
-                    addedW = true;
-                    scene.add(world.getWorld());
-                    scene.add(world.getSkybox());
-                    island = world.getWorld();
-                    sky = world.getSkybox();
-                }
+            switch (curState) {
+                case "WAITING": //CARICAMENTO DEL MONDO
+                    added = true;
 
-
-                if (addedP && addedW) {
-                    document.getElementById("play").style.display = "block"
-                    island.rotation.y += 0.1 * dt;
-                }
-
-                break;
-            case "PREPARING": //ATTIVATO DOPO AVER PREMUTO GIOCA
-
-                if (island.rotation.y > 0.001) {
-                    island.rotation.y -= (island.rotation.y * 5) * dt;
-                } else if (!areVectorsEqual(camera.position, portPos)) {
-                    island.rotation.y = 0;
-                    sky.rotation.y = 0;
-                    lerpCameraVision(curLook, portLook, globalSpeed * 4)
-                    camera.position.lerp(portPos, globalSpeed * 4)
-                } else if (player.getPosition().y > 0.6) {
-                    if (player.readyToPlay()) {
-                        if (!falling) {
-                            falling = true;
-                            player.play("falling");
-                        }
-
-                        player.lerpPosition(fallPos, globalSpeed * 10)
-                    }
-                }
-
-                let timeA = 1;
-                let timeB = 1;
-                if (debug) timeA = timeB = 1;
-                if (!impact && player.getPosition().y < 0.8) {
-                    impact = true;
-                    player.playOnceWithTransition("impact");
-                    setTimeout(() => {
-                        curLook = portLook;
-                        player.playOnceWithTransition("standing");
-                        setTimeout(() => {
-                            player.play("idle")
-                            curState = "CUTSCENE_INITIAL";
-                        }, timeA) //15000 val giusto
-                    }, timeB) //3000 val giusto
-                }
-                break;
-            case "CUTSCENE_INITIAL": //PRIMA CUTSCENE
-                if (!areVectors2Equal(player.getPosition(), l1Points[0][0])) {
-                    player.play("walk")
-                    player.rotateY(3.8);
-                    camera.position.lerp(l1Pos, globalSpeed);
-                    camera.lookAt(player.getPosition());
-                    player.lerpPosition(new Vector3(l1Points[0][0].x, 10, l1Points[0][0].y), globalSpeed);
-                } else {
-                    player.play("idle");
-                    curState = "LVL1"
-                }
-                break;
-            case "LVL1":
-                camera.lookAt(player.getPosition());
-                if (transition >= 1 && (Math.abs(player.getRotation().y) - Math.abs(l1Points[curPos][3]) < 0.04) && (curPos !== 6 && curPos !== 5 && curPos !== 0 && curPos !== 4)) { //Caso in cui ruota su se stesso per andare alla prossima casa
-                    console.log(Math.abs(player.getRotation().y) - Math.abs(l1Points[curPos][3]) < 0.001)
-                    //Giro
-                    player.playOnceWithTransition("rT");
-                    player.lerpAngleY(l1Points[curPos][3], globalSpeed);
-                } else if (transition >= 0 && transition < 1) { //Deve camminare alla prossima casa
-                    if (curPos === 5) player.play("walkW");
-                    else if (curPos === 6) player.play("walkL");
-                    else player.play("walk")
-
-                    player.lerpWithBeizerCurve(l1Points[curPos][0], l1Points[curPos][1], l1Points[curPos][2], transition);
-                    if (curPos === 5) transition += 0.25 * globalSpeed; //Se sta andando al ponte ci va più lentamente
-                    else transition += globalSpeed;
-                } else if (!timeout && answered) { //cosi chiede solo una volta
-
-                    if (curPos < 5) { //Quando sta navigando per le case
-                        timeout = true;
-                        setTimeout(() => {
-                            //reset delle variabili per la prossima iterazione
-                            resetLVL1()
-                            if (curPos < 4) curPos++; //prossima casa
-                            else if (streak >= 5) curPos = 5; //prossimo livello
-                            else curPos = 6; //ritorno a casa 1
-
-                        }, 500)
-                    } else if (curPos === 6) { //Ritorno alla prima casa senza timeout
-                        curPos = 0;
-                        resetLVL1()
-                    } else {
-                        curState = "LVL2"
-                        curPos = 0;
-                        resetLVL1()
-                    } //Prossimo livello
-                } else if (!asked) { //Se deve ancora chiedere chiede la domanda
-                    if (curPos < 5) {
-                        ask(1);
-                        asked = true;
-                        player.play("idle");
-                    } else answered = true;
-                }
-                break;
-            case "LVL2":
-                if (debug) player.setEnergy(15);
-                //#region LEVEL 2 PART 1
-                if (transition === 0 && !areVectorsEqual(camera.position, l2Pos)) { // PREPARING CAMERA
-                    player.play("idleW")
-                    camera.position.lerp(l2Pos, globalSpeed*2)
-                } else if (transition === 0 && !areVectors2Equal(player.getPosition(), new Vector2(l2AfterBridge.x, l2AfterBridge.z))) { //PATH TO BRIDGE TO NEXT LEVEL
-                    player.play("walk");
-                    player.lerpPosition(l2AfterBridge, globalSpeed*2);
-                    guessed = true;
-                } else if (transition < 1 && (player.getEnergy() > 0.1 && guessed) || (player.getEnergy() > -0.7 && !guessed)) { //CLIMBING THE MOUNTAIN
-                    if (player.getEnergy() > -1 && !debug) player.decreaseEnergy(0.1 * globalSpeed*2) //CHEAT MATTO 2: commenta la linea di codice
-                    player.lerpWithBeizerCurve(l2Tol2p2[0], l2Tol2p2[1], l2Tol2p2[2], transition, !guessed);
-                    transition += 0.1 * globalSpeed*2 * player.getEnergy();
-                } //#endregion
-                //#region LEVEL 2 PART 2
-                if ((transition > 1 && transition < 2)) {
-                    if ((player.getEnergy() > 0.1 && guessed) || (player.getEnergy() > -0.7 && !guessed)) {
-                        if (!areVectorsEqual(camera.position, l2p2Pos)) {
-                            camera.position.lerp(l2p2Pos, globalSpeed*2);
-                            transition += 0.1 * globalSpeed*2
-                        } else transition += 0.1 * globalSpeed*2 * player.getEnergy();
-                        if (player.getEnergy() > -1 && !debug) player.decreaseEnergy(0.1 * globalSpeed*2) //CHEAT MATTO 2: commenta la linea di codice
-                        player.lerpWithBeizerCurve(l2Tol3[0], l2Tol3[1], l2Tol3[2], transition - 1, !guessed);
-                    }
-                } else if (transition > 2) { //condition to next level
-                    player.play("idle");
-                    if (!debug) player.setEnergy(0.7);
-                    else curPos = 9;
-                    curState = "LVL3";
-                    transition = 0;
-                }
-
-                //#endregion
-                //#region QUESTION MANAGEMENT
-                if (transition > 0) {
-                    if (!asked && ((player.getEnergy() < 0.1 && guessed) || (player.getEnergy() < -0.7 && !guessed))) { //condition to ask
-                        player.play("tired");
-                        setTimeout(() => {
-                            ask(2)
-                        }, 1000)
-                        asked = true;
-                        answered = false;
-                    } else if (answered) { //action if answered
-                        if (guessed) {
-                            player.play("walkW");
-                            asked = false;
-                            answered = false;
-                            player.setEnergy(0.7);
-                        } else {
-                            player.play("walkL");
-                            asked = false;
-                            answered = false;
-                            player.getRotation().y -= Math.PI;
-                            player.setEnergy(0);
+                    //#region Loading elements
+                    if (player.readyToGenerate() && !addedP) {
+                        addedP = true;
+                        player.generate();
+                        if (!insertedP) {
+                            insertedP = true;
+                            player.rotateY(4.12334) //circa 21pi/16
+                            scene.add(player.getPlayer());
                         }
                     }
-                }
-                //#endregion
-                camera.lookAt(player.getPosition());
-                break;
-            case "LVL3":
-                if (transition===0 && !areVectorsEqual(camera.position,new Vector3(1.9, 13, 1.2))) { //MOVING TO TOWER
-                    camera.position.lerp(new Vector3(1.9, 13, 1.2), globalSpeed*5);
-                } else if (transition < 1) { //WALK TO TURN
-                    player.play("walk");
-                    camera.position.lerp(new Vector3(-1.8023, 14, -1.3600), globalSpeed*5)
-                    player.lerpWithBeizerCurve(l3toCity[0][0], l3toCity[0][1], l3toCity[0][2], transition, false);
-                } else if (transition < 2) { //TORNANTE TO CITY
-                    player.play("walkW");
-                    camera.position.lerp(new Vector3(-3.86, 14, -5.32), globalSpeed*5)
-                    player.lerpWithBeizerCurve(l3toCity[1][0], l3toCity[1][1], l3toCity[1][2], transition - 1, false);
+                    if (world.readyToUse() && !addedW) {
+                        addedW = true;
+                        scene.add(world.getWorld());
+                        scene.add(world.getSkybox());
+                        island = world.getWorld();
+                        sky = world.getSkybox();
+                    }
 
 
-                } else { //GAME IN CITY
-                    if (transition < 3) {
-                        if (curPos === 4) camera.position.lerp(l3Camera[0], globalSpeed*5);
-                        else if (curPos === 11) camera.position.lerp(l3Camera[1], globalSpeed*5);
+                    if (addedP && addedW) {
+                        document.getElementById("play").style.display = "block"
+                        island.rotation.y += 0.1 * dt;
+                    }
 
-                        player.play("walk");
-                        player.lerpWithBeizerCurve(l3Points[curPos][0], l3Points[curPos][1], l3Points[curPos][2], transition - 2);
-                    } else if (transition < 3.1) {
-                        player.playOnceWithTransition("rT");
-                        player.lerpAngleY(l3Points[curPos][3], (transition-3));
-                    } else {
-                        player.play("idle");
-                        if (!asked && !debug) {
-                            asked = true;
-                            ask(3);
+                    break;
+                case "PREPARING": //ATTIVATO DOPO AVER PREMUTO GIOCA
 
-                        } else if ((asked && answered) || debug) {
-                            answered = false;
-                            asked = false;
-                            if (!guessed) player.lives--;
-                            if (curPos < l3Points.length - 1) {
-                                curPos++;
-                                transition = 2.11;
-                            } else {
-                                curPos=0;
-                                curState = "LVL4";
-                                transition = 0;
+                    if (audio === undefined) {
+                        //#region CREAZIONE AUDIO
+                        audio = new THREE.AudioListener();
+                        camera.add(audio);
+                        am = new AudioManager(audio);
+                        am.import("../sounds/environment.mp3", "environment")
+                        am.import("../sounds/soundtrack.mp3", "soundtrack")
+                        am.import("../sounds/impact.mp3", "impact")
+                        am.import("../sounds/pain.mp3", "pain")
+                        am.import("../sounds/walk.mp3", "walk")
+                        am.import("../sounds/talk.mp3", "talk")
+                        am.import("../sounds/cry.mp3", "cry")
+                        am.import("../sounds/wrong.mp3", "wrong")
+                        am.import("../sounds/guess.mp3", "guess")
+                        am.import("../sounds/tired.mp3", "tired")
+                        am.import("../sounds/scream.mp3", "scream")
+                        //#endregion
+                    } else if (am.everythingLoaded()) {
+                        am.play("environment",true,0.05)
+                        am.play("soundtrack",true,0.07)
+                    }
+
+                    if (island.rotation.y > 0.001) {
+                        island.rotation.y -= (island.rotation.y * 5) * dt;
+                    } else if (!areVectorsEqual(camera.position, portPos)) {
+                        island.rotation.y = 0;
+                        sky.rotation.y = 0;
+                        lerpCameraVision(curLook, portLook, globalSpeed * 4)
+                        camera.position.lerp(portPos, globalSpeed * 4)
+                    } else if (player.getPosition().y > 0.6) {
+                        if (player.readyToPlay()) {
+                            if (!falling) {
+                                falling = true;
+                                player.play("falling");
                             }
 
+                            player.lerpPosition(fallPos, globalSpeed * 10)
                         }
                     }
 
-                    player.play("idleW")
-                }
+                    let timeA = 15000;
+                    let timeB = 3000;
+                    let timeC = 9000;
+                    if (debug) timeA = timeB = timeC= 1;
+                    if (!impact && player.getPosition().y < 0.8) {
+                        impact = true;
+                        player.playOnceWithTransition("impact");
+                        am.play("impact",false,0.5);
+                        setTimeout(() => {
+                            curLook = portLook;
+                            player.playOnceWithTransition("standing");
+                            if (timeC!==1) {
+                                setTimeout(() => {
+                                    am.play("pain", false, 1);
+                                }, timeC)
+                            }
 
-                if (debug) transition += 0.1 * globalSpeed * player.getEnergy();
-                else transition += 0.1 * globalSpeed;
-                camera.lookAt(player.getPosition())
+                            setTimeout(() => {
+                                player.play("idle")
+                                curState = "CUTSCENE_INITIAL";
+                            }, timeA) //15000 val giusto
+                        }, timeB) //3000 val giusto
+                    }
+                    break;
+                case "CUTSCENE_INITIAL": //PRIMA CUTSCENE
+                    if (!areVectors2Equal(player.getPosition(), l1Points[0][0])) {
+                        player.play("walk")
+                        am.play("walk",true,1,1.5)
+                        player.rotateY(3.8);
+                        camera.position.lerp(l1Pos, globalSpeed);
+                        camera.lookAt(player.getPosition());
+                        player.lerpPosition(new Vector3(l1Points[0][0].x, 10, l1Points[0][0].y), globalSpeed);
+                    } else {
+                        player.play("idle");
+                        am.stop("walk")
+                        curState = "LVL1"
+                    }
+                    break;
+                case "LVL1":
+                    camera.lookAt(player.getPosition());
+                    if (transition >= 1 && (Math.abs(player.getRotation().y) - Math.abs(l1Points[curPos][3]) < 0.04) && (curPos !== 6 && curPos !== 5 && curPos !== 0 && curPos !== 4)) { //Caso in cui ruota su se stesso per andare alla prossima casa
+                        //Giro
+                        if (!played) {
+                            am.stop("walk")
+                            player.playOnceWithTransition("rT");
+                            played = true;
+                        }
+                        player.lerpAngleY(l1Points[curPos][3], globalSpeed);
+                    } else if (transition >= 0 && transition < 1) { //Deve camminare alla prossima casa
+                        played = false;
+                        am.play("walk",true,1,1.5)
+                        if (curPos === 5)player.play("walkW");
+                        else if (curPos === 6){
+                            player.play("walkL");
+                            am.play("cry",false,1);
+                        }
+                        else player.play("walk")
 
-                break;
-            case "LVL4": // DISTANZA ESEMPIO/DT ESEMPIO = DISTANZA/DT
-                if (transition < 1) {
-                    player.lerpWithBeizerCurve(l4DoorCurve[0], l4DoorCurve[1], l4DoorCurve[2], transition, false)
-                    player.play("walk");
-                } else{
-                    if (debug){
-                        curState ="WIN";
+                        player.lerpWithBeizerCurve(l1Points[curPos][0], l1Points[curPos][1], l1Points[curPos][2], transition);
+                        if (curPos === 5) transition += 0.25 * globalSpeed; //Se sta andando al ponte ci va più lentamente
+                        else transition += globalSpeed;
+                    } else if (!timeout && answered) { //cosi chiede solo una volta
+
+                        if (curPos < 5) { //Quando sta navigando per le case
+                            timeout = true;
+                            setTimeout(() => {
+                                //reset delle variabili per la prossima iterazione
+                                resetLVL1()
+                                if (curPos < 4) curPos++; //prossima casa
+                                else if (streak >= 5) curPos = 5; //prossimo livello
+                                else curPos = 6; //ritorno a casa 1
+
+                            }, 500)
+                        } else if (curPos === 6) { //Ritorno alla prima casa senza timeout
+                            curPos = 0;
+                            resetLVL1()
+                        } else {
+                            curState = "LVL2"
+                            curPos = 0;
+                            resetLVL1()
+                        } //Prossimo livello
+                    } else if (!asked) { //Se deve ancora chiedere chiede la domanda
+                        if (curPos < 5) {
+                            am.stop("walk")
+                            am.play("talk",false,1,0.5+Math.random()*1000,true)
+                            setTimeout(()=>{am.stop("talk")},Math.random()*2000 + 1000)
+                            ask(1);
+                            asked = true;
+                            player.play("idle");
+                        } else answered = true;
+                    }
+                    break;
+                case "LVL2":
+                    if (debug) player.setEnergy(15);
+                    //#region LEVEL 2 PART 1
+                    if (transition === 0 && !areVectorsEqual(camera.position, l2Pos)) { // PREPARING CAMERA
+                        am.stop("walk")
+                        player.play("idleW")
+                        camera.position.lerp(l2Pos, globalSpeed * 2)
+                    } else if (transition === 0 && !areVectors2Equal(player.getPosition(), new Vector2(l2AfterBridge.x, l2AfterBridge.z))) { //PATH TO BRIDGE TO NEXT LEVEL
+                        am.play("walk",true,1,1.5*player.getEnergy());
+                        player.play("walk");
+                        player.lerpPosition(l2AfterBridge, globalSpeed * 2);
+                        guessed = true;
+                    } else if (transition < 1 && (player.getEnergy() > 0.1 && guessed) || (player.getEnergy() > -0.7 && !guessed)) { //CLIMBING THE MOUNTAIN
+                        if (player.getEnergy() > -1 && !debug) player.decreaseEnergy(0.1 * globalSpeed * 2) //CHEAT MATTO 2: commenta la linea di codice
+                        player.lerpWithBeizerCurve(l2Tol2p2[0], l2Tol2p2[1], l2Tol2p2[2], transition, !guessed);
+                        transition += 0.1 * globalSpeed * 2 * player.getEnergy();
+                    } //#endregion
+                    //#region LEVEL 2 PART 2
+                    if ((transition > 1 && transition < 2)) {
+                        if ((player.getEnergy() > 0.1 && guessed) || (player.getEnergy() > -0.7 && !guessed)) {
+                            if (!areVectorsEqual(camera.position, l2p2Pos)) {
+                                camera.position.lerp(l2p2Pos, globalSpeed * 2);
+                                transition += 0.1 * globalSpeed * 2
+                            } else transition += 0.1 * globalSpeed * 2 * player.getEnergy();
+                            if (player.getEnergy() > -1 && !debug) player.decreaseEnergy(0.1 * globalSpeed * 2) //CHEAT MATTO 2: commenta la linea di codice
+                            player.lerpWithBeizerCurve(l2Tol3[0], l2Tol3[1], l2Tol3[2], transition - 1, !guessed);
+                        }
+                    } else if (transition > 2) { //condition to next level
+                        player.play("idle");
+                        am.stop("walk")
+                        if (debug) player.setEnergy(0.7);
+                        else curPos = 9;
+                        curState = "LVL3";
+                        transition = 0;
+                    }
+
+                    //#endregion
+                    //#region QUESTION MANAGEMENT
+                    if (transition > 0) {
+                        if (!asked && ((player.getEnergy() < 0.1 && guessed) || (player.getEnergy() < -0.7 && !guessed))) { //condition to ask
+                            am.play("tired",true,1,100,true);
+                            am.stop("walk")
+                            player.play("tired");
+                            setTimeout(() => {
+                                ask(2)
+                            }, 1000)
+                            asked = true;
+                            answered = false;
+                        } else if (answered) { //action if answered
+                            am.stop("tired");
+                            am.play("walk",true,1,1.5)
+
+                            if (guessed) {
+                                player.play("walkW");
+                                asked = false;
+                                answered = false;
+                                player.setEnergy(0.7);
+                            } else {
+                                player.play("walkL");
+                                asked = false;
+                                answered = false;
+                                player.getRotation().y -= Math.PI;
+                                player.setEnergy(0);
+                            }
+                        }
+                    }
+                    //#endregion
+                    camera.lookAt(player.getPosition());
+                    break;
+                case "LVL3":
+                    if (debug) transition += globalSpeed * player.getEnergy();
+                    else transition += 0.2 * globalSpeed;
+
+                    if (transition === 0 && !areVectorsEqual(camera.position, new Vector3(1.9, 13, 1.2))) { //MOVING TO TOWER
+                        camera.position.lerp(new Vector3(1.9, 13, 1.2), globalSpeed * 5);
+                    } else if (transition < 1) { //WALK TO TURN
+                        am.play("walk",true,1,1.5)
+                        player.play("walk");
+                        camera.position.lerp(new Vector3(-1.8023, 14, -1.3600), globalSpeed * 5)
+                        player.lerpWithBeizerCurve(l3toCity[0][0], l3toCity[0][1], l3toCity[0][2], transition, false);
+                    } else if (transition < 2) { //TORNANTE TO CITY
+                        player.play("walkW");
+                        camera.position.lerp(new Vector3(-3.86, 14, -5.32), globalSpeed * 5)
+                        player.lerpWithBeizerCurve(l3toCity[1][0], l3toCity[1][1], l3toCity[1][2], transition - 1, false);
+
+
+                    } else { //GAME IN CITY
+                        if (transition < 3) {
+                            //doppio incremento cosi è più veloce
+                            if (debug) transition += globalSpeed * player.getEnergy();
+                            else transition += 0.3 * globalSpeed;
+
+                            if (curPos === 4) camera.position.lerp(l3Camera[0], globalSpeed * 5);
+                            else if (curPos === 11) camera.position.lerp(l3Camera[1], globalSpeed * 5);
+
+                            player.play("walk");
+                            am.play("walk",true,1,1.5)
+                            player.lerpWithBeizerCurve(l3Points[curPos][0], l3Points[curPos][1], l3Points[curPos][2], transition - 2);
+                        } else if (transition < 3.1) {
+                            if (!played) {
+                                player.playOnceWithTransition("rT");
+                                played = true;
+                            }
+                            player.lerpAngleY(l3Points[curPos][3], (transition - 3));
+                        } else {
+                            player.play("idle");
+                            am.stop("walk");
+
+                            played = false;
+                            if (!asked && !debug) {
+                                asked = true;
+                                ask(3);
+
+                            } else if ((asked && answered) || debug) {
+                                answered = false;
+                                asked = false;
+                                if (!guessed) player.lives--;
+                                if (curPos < l3Points.length - 1) {
+                                    curPos++;
+                                    transition = 2.11;
+                                } else {
+                                    curPos = 0;
+                                    curState = "LVL4";
+                                    transition = 0;
+                                }
+
+                            }
+                        }
+
+                        player.play("idleW")
+                    }
+
+                    camera.lookAt(player.getPosition())
+
+                    break;
+                case "LVL4":
+                    if (transition < 1) {
+                        player.lerpWithBeizerCurve(l4DoorCurve[0], l4DoorCurve[1], l4DoorCurve[2], transition, false)
+                        player.play("walk");
+                    } else {
+                        if (debug) {
+                            curState = "WIN";
+                            transition = 0;
+                            curPos = 0;
+                        }
+                        player.play("idle");
+                    }
+
+                    if (finalQuestions !== 0 && !asked && transition > 1) {
+                        player.play("idle")
+                        asked = true
+                        askWorst(3)
+                        am.play("talk",false,1,-3000,true)
+                        setTimeout(()=>{am.stop("talk")},Math.random()*2000 + 1000)
+
+                    } else if (answered && !guessed) curState = "RESTART";
+                    else if (answered && guessed) {
+                        player.play("win")
+                        answered = false;
+                        setTimeout(() => {
+                            asked = false;
+                            finalQuestions--;
+                        }, 5000)
+                    } else if (finalQuestions === 0) {
                         transition = 0;
                         curPos = 0;
+                        curState = "WIN"
                     }
-                    player.play("idle");
-                }
 
-                if (finalQuestions !== 0 && !asked && transition > 1 ) {
-                    player.play("idle")
-                    asked = true
-                    askWorst(3)
-                } else if (answered && !guessed) curState = "RESTART";
-                else if (answered && guessed) {
-                    player.play("win")
-                    answered = false;
-                    setTimeout(() => {
-                        asked = false;
-                        finalQuestions--;
-                    }, 5000)
-                } else if (finalQuestions === 0){
-                    transition = 0;
-                    curPos = 0;
-                    curState = "WIN"
-                }
+                    transition += dt * 0.3;
+                    camera.lookAt(player.getPosition())
+                    break;
+                case "RESTART":
+                    delay += dt;
+                    if (!got) {
+                        am.play("scream",false,1);
+                        player.playOnceWithTransition("jump")
+                        coord = new Vector3(player.getPosition().x, player.getPosition().y, player.getPosition().z);
+                        got = true
+                    }
+                    if (delay > 1) {
+                        camera.lookAt(coord);
+                        player.getPosition().y += 5 * dt;
+                        if (player.getPosition().y - 10 > camera.position.y) location.reload(true);
+                    }
+                    break
+                case "WIN":
+                    if (!areVectorsEqual(camera.position, new Vector3(-11.239853148494923, 13.658057473487194, -5.290968502432763))) camera.position.lerp(new Vector3(-11.239853148494923, 13.658057473487194, -5.290968502432763), globalSpeed)
+                    if (transition < 1) player.lerpWithBeizerCurve(l4Points[curPos][0], l4Points[curPos][1], l4Points[curPos][2], transition, false);
+                    else if (transition !== 2) {
+                        transition = 0;
+                        if (curPos < l4Points.length - 1) curPos++;
+                        else transition = 2;
+                    }
+                    transition += globalSpeed;
+                    camera.lookAt(player.getPosition())
 
-                transition += dt * 0.3;
-                camera.lookAt(player.getPosition())
-                break;
-            case "RESTART":
-                delay += dt;
-                if (!got) {
-                    player.playOnceWithTransition("jump")
-                    coord = new Vector3(player.getPosition().x, player.getPosition().y, player.getPosition().z);
-                    got = true
-                }
-                if (delay > 1) {
-                    camera.lookAt(coord);
-                    player.getPosition().y += 5 * dt;
-                    if (player.getPosition().y - 10 > camera.position.y) location.reload(true);
-                }
-                break
-            case "WIN":
-                if (!areVectorsEqual(camera.position,new Vector3(-11.239853148494923, 13.658057473487194, -5.290968502432763))) camera.position.lerp(new Vector3(-11.239853148494923, 13.658057473487194, -5.290968502432763),globalSpeed)
-                if (transition<1) player.lerpWithBeizerCurve(l4Points[curPos][0],l4Points[curPos][1],l4Points[curPos][2],transition,false);
-                else if (transition!==2) {
-                    transition=0;
-                    if (curPos<l4Points.length-1) curPos++;
-                    else transition=2;
-                }
-                transition+=globalSpeed*5;
-                camera.lookAt(player.getPosition())
-
-                if (transition===2) player.play("victory")
-                break;
+                    if (transition === 2) player.play("victory")
+                    else player.play("walkW")
+                    break;
+            }
         }
     }
 
@@ -521,6 +604,7 @@ let got = false;
 let coord;
 let delay = 0;
 let finalQuestions = 5;
+let played=false;
 
 function resetLVL1() {
     timeout = false;
