@@ -75,7 +75,7 @@ class Question {
     }
 }
 
-//Da la domanda per il colore e chiede anche il numero di domande da recuperare nella fetch
+//Da la domanda in base al livello che gli passi da 1 a 3, e se attivato worst chiede la categoria un cui hai fatto più schifo
 async function getQuestions(level, worst) {
     let res;
     let dif;
@@ -298,7 +298,8 @@ function decrementTimer() {
 
 // Nascondono la domanda fatta dalla pagina
 function hide() {
-    scene.remove(title);
+    if (curState==="LVL3" ||curState==="LVL4" ) ui.remove(title);
+    else scene.remove(title);
     for (let i = 0; i < ans.length; i++) ui.remove(ans[i]);
     document.getElementById("question").style.display = "none";
 }

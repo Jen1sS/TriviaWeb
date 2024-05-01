@@ -157,7 +157,7 @@ async function initScene() {
     //#endregion
     //#region SETUP LUCI
     dl = new THREE.DirectionalLight(0xffffcc, 4);
-    const ShadowmapSize = 16384;
+    const ShadowmapSize = 8192;
     const increaseAmount = 50;
     dl.position.set(30, 40, 0);
     dl.lookAt(0, 0, 0);
@@ -237,7 +237,7 @@ function animate() {
 
         //AUTOMA A STATI FINITI
         if (addedW) sky.rotation.y += 0.05 * dt;
-        if ((am !== undefined && am.everythingLoaded()) || (curState==="PREPARING" || curState==="WAITING")) { //cosi posso fare play quando mi pare
+        if ((am !== undefined && am.everythingLoaded()) || (curState==="PREPARING" || curState==="WAITING")) { //cosi posso fare play (delle animazioni) quando mi pare
 
             switch (curState) {
                 case "WAITING": //CARICAMENTO DEL MONDO
@@ -415,7 +415,7 @@ function animate() {
                         player.lerpPosition(l2AfterBridge, globalSpeed * 2);
                         guessed = true;
                     } else if (transition < 1 && (player.getEnergy() > 0.1 && guessed) || (player.getEnergy() > -0.7 && !guessed)) { //CLIMBING THE MOUNTAIN
-                        if (player.getEnergy() > -1 && !debug) player.decreaseEnergy(0.1 * globalSpeed * 2) //CHEAT MATTO 2: commenta la linea di codice
+                        if (player.getEnergy() > -1 && !debug) player.decreaseEnergy(0.1 * globalSpeed * 2)
                         player.lerpWithBeizerCurve(l2Tol2p2[0], l2Tol2p2[1], l2Tol2p2[2], transition, !guessed);
                         transition += 0.1 * globalSpeed * 2 * player.getEnergy();
                     } //#endregion
@@ -426,7 +426,7 @@ function animate() {
                                 camera.position.lerp(l2p2Pos, globalSpeed * 2);
                                 transition += 0.1 * globalSpeed * 2
                             } else transition += 0.1 * globalSpeed * 2 * player.getEnergy();
-                            if (player.getEnergy() > -1 && !debug) player.decreaseEnergy(0.1 * globalSpeed * 2) //CHEAT MATTO 2: commenta la linea di codice
+                            if (player.getEnergy() > -1 && !debug) player.decreaseEnergy(0.1 * globalSpeed * 2)
                             player.lerpWithBeizerCurve(l2Tol3[0], l2Tol3[1], l2Tol3[2], transition - 1, !guessed);
                         }
                     } else if (transition > 2) { //condition to next level
