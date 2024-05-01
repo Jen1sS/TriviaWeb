@@ -1,8 +1,12 @@
 import {GLTFLoader} from "gltf";
 import * as THREE from 'three';
 import {AnimationMixer} from "three";
+import {TextGeometry} from '../../node_modules/three/examples/jsm/geometries/TextGeometry.js';
+import {FontLoader} from "../../node_modules/three/examples/jsm/loaders/FontLoader.js";
 
 const loaderGLTF = new GLTFLoader();
+const encoder = new TextEncoder('utf-16');
+
 
 
 export class ModelImporter {
@@ -189,12 +193,19 @@ export class AudioManager {
     async import(path, name) {
         this.elToAdd++;
 
-        await this.loader.load(path, (buffer) => {
-            this.elToAdd--;
+        await this.loader.load(
+            path,
+            (buffer) => {
+                this.elToAdd--;
 
-            if (name === undefined) this.audioLoaded[path] = buffer;
-            else this.audioLoaded[name] = buffer;
-        });
+                if (name === undefined) this.audioLoaded[path] = buffer;
+                else this.audioLoaded[name] = buffer;
+            },
+            (xhr) => {
+                if (xhr.loaded === xhr.total) {
+                    console.log("AudioManager - loaded " + path);
+                }
+            });
     }
 
     play(name, looping, volume, speedOrPitch, changePitch) {
@@ -205,19 +216,90 @@ export class AudioManager {
             this.audios[name].setVolume(volume);
             this.audios[name].play();
         }
-        if (speedOrPitch !== undefined){
+        if (speedOrPitch !== undefined) {
             if (changePitch !== undefined && changePitch) this.audios[name].detune = speedOrPitch;
             else this.audios[name].setPlaybackRate(speedOrPitch);
         }
 
     }
 
-    stop(name){
+    stop(name) {
         this.audios[name].stop();
     }
 
-    setPlayBackSpeed(name, speed){
+    setPlayBackSpeed(name, speed) {
         this.audios[name].playbackRate = speed;
+    }
+
+    everythingLoaded() {
+        return this.elToAdd === 0;
+    }
+}
+
+export class FontManager {
+    constructor() {
+        this.elToAdd = 0;
+        this.fonts = {};
+        this.loader = new FontLoader();
+
+        this.lastW=0;
+        this.lastH=0;
+    }
+
+    import(path, name) {
+        this.elToAdd++;
+        this.loader.load(
+            path,
+            (font) => {
+                this.elToAdd--;
+                this.fonts[name] = font;
+            },
+            (xhr) => {
+                if (xhr.loaded === xhr.total) {
+                    console.log("FontManager - loaded " + path);
+                }
+            }
+        )
+    }
+
+    getNewText(content, height, size, font,length) {
+        if (length===undefined) length = 20;
+        let w = 0;
+        let h = 0;
+        let last = 0;
+        for (let i = 0; i < content.length; i++) {
+            if (content.charAt(i) === ' ' && i-last>length){
+                content = content.slice(0, i) + "\n" + content.slice(i);
+                if (w < (i-last)*size) w = (i-last)*size;
+                h+=height;
+                last=i;
+            }
+        }
+
+        const ret = new THREE.Mesh(
+            new TextGeometry(content, {
+                height: height,
+                size: size,
+                font: this.fonts[font],
+            }),
+            new THREE.MeshPhysicalMaterial({
+                color: 0xffffff,
+            })
+        )
+        this.lastW = w;
+        this.lastH = h;
+
+        ret.castShadow = true;
+        ret.receiveShadow = true;
+        return ret;
+    }
+
+    getWidth(){
+        return this.lastW;
+    }
+
+    getHeight(){
+        return this.lastH;
     }
 
     everythingLoaded() {

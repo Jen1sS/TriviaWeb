@@ -121,6 +121,10 @@ export class Player {
         }
     }
 
+    getBoundingBox(){
+        return this.player.computeBoundingBox();
+    }
+
 
     lerpAngleY(v2, alpha) {
         let targetQuaternion = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), v2);

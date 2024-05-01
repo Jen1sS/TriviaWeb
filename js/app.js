@@ -1,4 +1,5 @@
 //DOMANDE
+
 let quest;
 let end;
 let points = 0;
@@ -8,6 +9,11 @@ let guessed = false;
 let started = false;
 let category;
 
+//THREE
+let scene = null;
+let ui = null;
+let camera = null;
+let uiCamera = null;
 
 //STATO DELL'AUTOMA
 let curState = "WAITING";
@@ -22,6 +28,16 @@ let errors = [0, 0, 0, 0, 0];
 
 //sound
 let am;
+
+//font
+let fm;
+
+//livello 1
+let curPos = 0;
+
+let width;
+let height;
+
 
 
 class Question {
@@ -133,6 +149,8 @@ function askWorst(level) {
 }
 
 //Carica la domanda sulla pagina
+let title
+let ans =[];
 function loadQuestion() {
     started = true;
     const body = document.getElementById("container");
@@ -141,7 +159,38 @@ function loadQuestion() {
 
     console.log(quest[quest.length - 1].getRightAnswer()); //CHEAT MATTI D:
 
+
+    //TITOLO DOMANDA SOPRA PERSONAGGIO
+    if (curState!=="LVL3") {
+        title = fm.getNewText(quest[quest.length - 1].getName(),0.05 ,0.1,"bold");
+        title.position.set(player.getPosition().x, player.getPosition().y + 0.8, player.getPosition().z);
+        title.lookAt(camera.position);
+        scene.add(title);
+    } else {
+        title = fm.getNewText(quest[quest.length - 1].getName(),0 ,0.05,"bold");
+        title.position.set(-0.3,-0,0.3)
+        title.rotation.set(Math.PI/2,0,0);
+        ui.add(title)
+    }
+
+
+    //RISPOSTE NELLA SECONDA SCENE
+    const size = 0.01;
+    const height = 0;
+    ans = [];
+
+    for (let i = 0; i < quest[quest.length - 1].getAnswers().length; i++) {
+        ans.push(fm.getNewText(quest[quest.length-1].getAnswers()[i]+" - Press "+(i+1),height ,size,"bold",18))
+        ans[i].rotation.set(Math.PI/2,0,0);
+        ans[i].position.set((i-1.7)*0.3,-0.2,-0.15)
+        ui.add(ans[i]);
+    }
+
+
+
+    //#region OLD QUESTION
     if (quest[quest.length - 1].getAnswers().length === 2) {
+
         body.innerHTML = "<div id='question'><h2>" + quest[quest.length - 1].getName() + "</h2>" +
             "<hr>" +
             "<div id='answers'>" +
@@ -154,6 +203,7 @@ function loadQuestion() {
             "</div>" +
             "</div>";
     } else {
+
         body.innerHTML = "<div id='question'><h2>" + quest[quest.length - 1].getName() + "</h2>" +
             "<hr>" +
             "<div id='answers'>" +
@@ -168,13 +218,14 @@ function loadQuestion() {
             "</div>" +
             "</div>";
     }
+    //#endregion
     setTimeout(decrementTimer, 1000);
 }
 
 //Verifica la domanda
 function verify(num) {
     if (!end) {
-        if (quest[quest.length - 1].getRightAnswer() === num) {
+        if (quest[quest.length - 1].getRightAnswer() === quest[quest.length-1].getAnswers()[num-1]) {
 
             //update stats bar
             const tas = timer
@@ -247,6 +298,8 @@ function decrementTimer() {
 
 // Nascondono la domanda fatta dalla pagina
 function hide() {
+    scene.remove(title);
+    for (let i = 0; i < ans.length; i++) ui.remove(ans[i]);
     document.getElementById("question").style.display = "none";
 }
 

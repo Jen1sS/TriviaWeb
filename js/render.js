@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import {Vector2, Vector3} from 'three';
-import {AudioManager, ModelImporter} from './Classes/Importers.js';
+import {AudioManager, FontManager, ModelImporter} from './Classes/Importers.js';
 import {Board} from "./Classes/Board.js";
 import {Player} from "./Classes/Elements.js";
 
@@ -8,8 +8,6 @@ import {Player} from "./Classes/Elements.js";
 //Necessari per ThreeJs
 let gl = null;       // Il canvas in cui renderizzare
 let renderer = null; // Il motore di render
-let camera = null;
-let scene = null;    // la scena radice
 let clock = null;    // Oggetto per la gestione del timinig della scena
 
 let defFov = 70;
@@ -36,7 +34,7 @@ let audio;
 
 //Visuali della camera necessarie per lerping
 let curLook = new THREE.Vector3(0, 5, 0);
-//#region cutsene iniziale
+//#region cutscene iniziale
 const portLook = new THREE.Vector3(24, 1, 4);
 const portPos = new THREE.Vector3(21.5, 2, 4);
 const fallPos = new THREE.Vector3(24, -0.89, 4);
@@ -55,7 +53,6 @@ const l1Points = [ // I TRE VECTOR SONO INIZIO,SECONDO PUNTO E FINE
     [new Vector2(22.19, -3.78), new Vector2(21.388, -2.09), new Vector2(20.59, -2.38), -2.1145] //FAILED LEVEL
 
 ]
-let curPos = 0; //CHEAT MATTO 3: se metti curPos a 5 skippa il livello 1
 //endregion
 
 //#region livello 2
@@ -121,8 +118,8 @@ async function initScene() {
     if (renderer != null) return;
 
 
-    let width = window.innerWidth;
-    let height = window.innerHeight;
+    width = window.innerWidth;
+    height = window.innerHeight;
 
     //#region CREAZIONE WORLD
     world = new Board();
@@ -142,10 +139,18 @@ async function initScene() {
     camera.position.set(40, 30, 40);
     camera.lookAt(0, 5, 0)
     clock = new THREE.Clock();
+
+    uiCamera = new THREE.PerspectiveCamera(100, width / height, 0.1, 500);
+    uiCamera.position.set(0,-0.5,0);
+    uiCamera.lookAt(0, 0, 0)
     //#endregion
     //#region CREAZIONE SCENE
     scene = new THREE.Scene();
     scene.background = new THREE.Color(0x000000);
+
+    ui = new THREE.Scene();
+    ui.add(new THREE.AmbientLight(0xffffff,10))
+
     //#endregion
     //#region CREAZIONE PLAYER
     player = new Player();
@@ -169,6 +174,10 @@ async function initScene() {
     let dl2 = new THREE.AmbientLight(0xffffff, 1); //rende le ombre meno black
     scene.add(dl2)
     scene.add(dl);
+    //#endregion
+    //#region CREAZIONE FONT
+    fm = new FontManager();
+    fm.import("../node_modules/three/examples/fonts/droid/droid_sans_bold.typeface.json","bold");
     //#endregion
 
     document.getElementById("play").style.display = "none"
@@ -217,13 +226,14 @@ function animate() {
 
     renderer.clear();
     renderer.render(scene, camera);
+    renderer.render(ui, uiCamera);
+
 
     if (addedW) player.update(dt, world.getWorld());
     if (player.lives < 0) curState = "RESTART";
 
 
     if (mi.everythingLoaded()) {
-
 
         //AUTOMA A STATI FINITI
         if (addedW) sky.rotation.y += 0.05 * dt;
@@ -302,7 +312,7 @@ function animate() {
 
                     let timeA = 15000;
                     let timeB = 3000;
-                    let timeC = 9000;
+                    let timeC = 9500;
                     if (debug) timeA = timeB = timeC= 1;
                     if (!impact && player.getPosition().y < 0.8) {
                         impact = true;
@@ -339,7 +349,7 @@ function animate() {
                     }
                     break;
                 case "LVL1":
-                    camera.lookAt(player.getPosition());
+                    if (!asked)camera.lookAt(player.getPosition());
                     if (transition >= 1 && (Math.abs(player.getRotation().y) - Math.abs(l1Points[curPos][3]) < 0.04) && (curPos !== 6 && curPos !== 5 && curPos !== 0 && curPos !== 4)) { //Caso in cui ruota su se stesso per andare alla prossima casa
                         //Giro
                         if (!played) {
@@ -422,8 +432,7 @@ function animate() {
                     } else if (transition > 2) { //condition to next level
                         player.play("idle");
                         am.stop("walk")
-                        if (debug) player.setEnergy(0.7);
-                        else curPos = 9;
+                        if (debug) curPos = 9;
                         curState = "LVL3";
                         transition = 0;
                     }
@@ -618,6 +627,8 @@ window.addEventListener('resize', onWindowResize, false)
 function onWindowResize() {
     camera.aspect = window.innerWidth / window.innerHeight
     camera.updateProjectionMatrix()
+    uiCamera.aspect = window.innerWidth / window.innerHeight
+    uiCamera.updateProjectionMatrix()
     renderer.setSize(window.innerWidth, window.innerHeight)
 }
 
@@ -647,6 +658,13 @@ document.addEventListener('keydown', function (event) {
         if (event.key === "u") camera.position.x -= 0.1;
         if (event.key === "h") camera.position.z += 0.1;
         if (event.key === "k") camera.position.z -= 0.1;
+    }
+
+    if (asked && !answered) {
+        if (event.key === "1") verify(1);
+        if (event.key === "2") verify(2);
+        if (event.key === "3") verify(3);
+        if (event.key === "4") verify(4);
     }
 });
 let ready = false;

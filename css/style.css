@@ -28,6 +28,7 @@ div#question {
     text-align: center;
     background-color: rgba(225, 225, 225, 0.1);
     backdrop-filter: blur(10px);
+    display: none;
 
     padding-left: 1rem;
     padding-right: 1rem;
